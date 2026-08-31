@@ -1,18 +1,59 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import sequelize from './config/database';
 import './models';
 import authRoutes from './routes/auth.routes';
+import clinicRoutes from './routes/clinic.routes';
+import { config } from './config/environment';
 
 const app = express();
+
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: config.swagger.title,
+      version: config.swagger.version,
+      description: config.swagger.description,
+    },
+    servers: [
+      {
+        url: `http://localhost:${config.port}`,
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
+      },
+    ],
+  },
+  apis: ['./src/routes/*.ts'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/clinics', clinicRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
