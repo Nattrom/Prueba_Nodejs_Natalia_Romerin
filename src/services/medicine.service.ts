@@ -1,0 +1,139 @@
+import Medicine from '../models/medicine.model';
+
+export interface MedicinePayload {
+  name?: string;
+  description?: string | null;
+}
+
+export interface MedicineResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ServiceError extends Error {
+  statusCode: number;
+}
+
+const makeServiceError = (message: string, statusCode: number): ServiceError => {
+  const error = new Error(message) as ServiceError;
+  error.statusCode = statusCode;
+  return error;
+};
+
+const validateRequiredString = (value: unknown, fieldName: string): string => {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw makeServiceError(`${fieldName} is required`, 400);
+  }
+
+  return value.trim();
+};
+
+const normalizeDescription = (value: unknown): string | null => {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    throw makeServiceError('Medicine description must be a string', 400);
+  }
+
+  const trimmedValue = value.trim();
+  return trimmedValue === '' ? null : trimmedValue;
+};
+
+const validateId = (value: number | undefined, fieldName: string): number => {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+    throw makeServiceError(`${fieldName} is invalid`, 400);
+  }
+
+  return value;
+};
+
+const serializeMedicine = (medicine: Medicine): MedicineResponse => ({
+  id: medicine.id,
+  name: medicine.name,
+  description: medicine.description,
+  createdAt: medicine.createdAt,
+  updatedAt: medicine.updatedAt,
+});
+
+export const createMedicine = async (payload: MedicinePayload): Promise<MedicineResponse> => {
+  const name = validateRequiredString(payload.name, 'Medicine name');
+  const description = normalizeDescription(payload.description);
+
+  const medicine = await Medicine.create({
+    name,
+    description,
+  });
+
+  return serializeMedicine(medicine);
+};
+
+export const listMedicines = async (): Promise<MedicineResponse[]> => {
+  const medicines = await Medicine.findAll({
+    order: [['createdAt', 'DESC']],
+  });
+
+  return medicines.map(serializeMedicine);
+};
+
+export const getMedicineById = async (medicineId: number): Promise<MedicineResponse> => {
+  const validMedicineId = validateId(medicineId, 'Medicine ID');
+
+  const medicine = await Medicine.findByPk(validMedicineId);
+
+  if (!medicine) {
+    throw makeServiceError('Medicine not found', 404);
+  }
+
+  return serializeMedicine(medicine);
+};
+
+export const updateMedicine = async (medicineId: number, payload: MedicinePayload): Promise<MedicineResponse> => {
+  const validMedicineId = validateId(medicineId, 'Medicine ID');
+
+  const medicine = await Medicine.findByPk(validMedicineId, { paranoid: false });
+
+  if (!medicine || medicine.deletedAt) {
+    throw makeServiceError('Medicine not found', 404);
+  }
+
+  const nextPayload: Partial<MedicinePayload> = {};
+
+  if (payload.name !== undefined) {
+    nextPayload.name = validateRequiredString(payload.name, 'Medicine name');
+  }
+
+  if (payload.description !== undefined) {
+    nextPayload.description = normalizeDescription(payload.description);
+  }
+
+  if (Object.keys(nextPayload).length === 0) {
+    throw makeServiceError('No valid medicine fields were provided', 400);
+  }
+
+  await medicine.update(nextPayload);
+
+  return serializeMedicine(medicine);
+};
+
+export const deleteMedicine = async (medicineId: number): Promise<{ message: string }> => {
+  const validMedicineId = validateId(medicineId, 'Medicine ID');
+
+  const medicine = await Medicine.findByPk(validMedicineId, { paranoid: false });
+
+  if (!medicine || medicine.deletedAt) {
+    throw makeServiceError('Medicine not found', 404);
+  }
+
+  await medicine.destroy();
+
+  return { message: 'Medicine deleted successfully' };
+};

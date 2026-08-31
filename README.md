@@ -87,11 +87,48 @@ npm run build
 npm start
 ```
 
+## Run with Docker
+
+Docker Compose starts the API and PostgreSQL together. The API uses `postgres` as the database hostname inside Docker. Local development can continue using `localhost` in `.env`.
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+The default development database values are defined in `.env.example`. You can override `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `JWT_SECRET` through your shell environment or a local `.env` file. Do not use development credentials in production.
+
+## Check Containers
+
+```bash
+docker compose ps
+```
+
+## View API Logs
+
+```bash
+docker compose logs -f api
+```
+
+## Stop Containers
+
+```bash
+docker compose down
+```
+
+The named `postgres_data` volume persists the database when containers are stopped with `docker compose down`.
+
+## API
+
+```
+http://localhost:3000
+```
+
 ## API Documentation
 
 Once the server is running, access Swagger UI at:
 ```
-http://localhost:3000/api-docs
+http://localhost:3000/api/docs
 ```
 
 ## Health Check
