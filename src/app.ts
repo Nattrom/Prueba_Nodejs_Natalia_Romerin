@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import sequelize from './config/database';
@@ -190,7 +191,10 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/app.ts', './src/routes/*.ts'],
+  apis: [
+    path.resolve(__dirname, `app.${__filename.endsWith('.ts') ? 'ts' : 'js'}`),
+    path.resolve(__dirname, `routes/*.${__filename.endsWith('.ts') ? 'ts' : 'js'}`),
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);

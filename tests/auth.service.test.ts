@@ -24,7 +24,7 @@ jest.mock('jsonwebtoken', () => ({
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from '../src/models/user.model';
+import User, { UserRole } from '../src/models/user.model';
 import * as authService from '../src/services/auth.service';
 
 const mockedUserModel = User as unknown as {
@@ -52,14 +52,14 @@ describe('Auth service', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: 'hashed-password',
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
     });
 
     const result = await authService.registerUser({
       name: 'John Doe',
       email: 'john@example.com',
       password: 'secure123',
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
     });
 
     expect(result.email).toBe('john@example.com');
@@ -68,7 +68,7 @@ describe('Auth service', () => {
       name: 'John Doe',
       email: 'john@example.com',
       password: 'hashed-password',
-      role: 'ADMIN',
+      role: UserRole.ADMIN,
     });
   });
 
@@ -78,7 +78,7 @@ describe('Auth service', () => {
       name: 'Jane Doe',
       email: 'jane@example.com',
       password: 'hashed-pass',
-      role: 'REQUEST_MANAGER',
+      role: UserRole.REQUEST_MANAGER,
     });
     mockedBcrypt.compare.mockResolvedValue(true);
     mockedJwt.sign.mockReturnValue('jwt-token');
