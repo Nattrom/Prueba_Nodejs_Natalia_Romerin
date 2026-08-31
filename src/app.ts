@@ -6,6 +6,9 @@ import sequelize from './config/database';
 import './models';
 import authRoutes from './routes/auth.routes';
 import clinicRoutes from './routes/clinic.routes';
+import warehouseRoutes from './routes/warehouse.routes';
+import medicineRoutes from './routes/medicine.routes';
+import warehouseMedicineRoutes from './routes/warehouseMedicine.routes';
 import { config } from './config/environment';
 
 const app = express();
@@ -54,6 +57,9 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/clinics', clinicRoutes);
+app.use('/api/warehouses', warehouseRoutes);
+app.use('/api/medicines', medicineRoutes);
+app.use('/api/warehouse-medicines', warehouseMedicineRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
