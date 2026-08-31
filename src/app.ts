@@ -10,6 +10,7 @@ import warehouseRoutes from './routes/warehouse.routes';
 import medicineRoutes from './routes/medicine.routes';
 import warehouseMedicineRoutes from './routes/warehouseMedicine.routes';
 import supplyRequestRoutes from './routes/supplyRequest.routes';
+import seedRoutes from './routes/seed.routes';
 import { config } from './config/environment';
 
 const app = express();
@@ -62,6 +63,7 @@ app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/medicines', medicineRoutes);
 app.use('/api/warehouse-medicines', warehouseMedicineRoutes);
 app.use('/api/supply-requests', supplyRequestRoutes);
+app.use('/api/seed', seedRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
