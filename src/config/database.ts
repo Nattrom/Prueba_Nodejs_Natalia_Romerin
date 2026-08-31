@@ -12,7 +12,6 @@ const sequelize = new Sequelize(
     logging: config.nodeEnv === 'development' ? console.log : false,
     define: {
       timestamps: true,
-      paranoid: true,
     },
     pool: {
       max: 5,
