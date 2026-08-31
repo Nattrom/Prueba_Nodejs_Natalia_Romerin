@@ -1,139 +1,291 @@
-# RiwiMediCare Plus API
+# RiwiMediCare Plus — Supply Request Management API
 
-Backend API for RiwiMediCare Plus medicine supply management system.
+RiwiMediCare Plus is a REST API for coordinating medicine supply requests between clinics and warehouses. It centralizes users, clinics, medicines, warehouses, and warehouse inventory so clinics can request supplies with reliable stock validation. Requests are created as pending and inventory is only consumed when a request is approved.
 
-## Coder
+## Main Features
 
-Natalia Romerin
-
-## Clan
-
-[Your Clan Name Here]
+- Public user registration and login.
+- JWT Bearer authentication and role-based authorization.
+- Clinic, warehouse, medicine, and warehouse inventory management.
+- Supply request creation, status transitions, and request history.
+- Inventory validation and transaction-based stock reduction on approval.
+- Sequelize soft deletion for primary business entities.
+- JSON seed upload with Multer memory storage.
+- Swagger UI API documentation.
+- Jest unit tests and coverage thresholds.
+- Docker and Docker Compose support.
 
 ## Technologies
 
-- Node.js 18+
+- Node.js
 - TypeScript
 - Express
+- Sequelize
 - PostgreSQL
-- Sequelize ORM
-- JSON Web Token (JWT)
-- Multer (file uploads)
-- Swagger JSDoc + Swagger UI
-- bcrypt (password hashing)
+- jsonwebtoken
+- bcryptjs
+- Multer
+- Swagger JSDoc and Swagger UI Express
+- Jest and ts-jest
+- Docker and Docker Compose
 
-## Installation
+## Architecture
 
-1. Clone the repository:
-```bash
-git clone https://github.com/Nattrom/Prueba_Nodejs_Natalia_Romerin.git
-cd Prueba_Nodejs_Natalia_Romerin
+The project follows a simple layered architecture:
+
+```text
+Routes
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Models
+  ↓
+PostgreSQL
 ```
 
-2. Install dependencies:
-```bash
-npm install
+- **Routes** define endpoint paths and apply authentication and role middleware.
+- **Controllers** translate HTTP requests and responses without business rules.
+- **Services** validate input and implement business rules, transactions, and database operations.
+- **Models** define Sequelize entities, relationships, validations, and soft deletion.
+- **PostgreSQL** persists application data.
+
+Middleware is used for JWT authentication, role authorization, and JSON-only Multer file uploads.
+
+## Project Structure
+
+```text
+src/
+  config/        Environment and Sequelize configuration
+  controllers/   HTTP request and response handling
+  middlewares/   JWT, role, and upload middleware
+  models/        Sequelize models and relationships
+  routes/        Express routes and OpenAPI JSDoc annotations
+  services/      Business rules and database operations
+  types/         Shared TypeScript declarations
+  app.ts         Express application and database initialization
+  server.ts      HTTP server startup
+tests/           Jest unit and authorization middleware tests
+Dockerfile       Production multi-stage API image
+docker-compose.yml API and PostgreSQL services
 ```
 
-3. Set up environment variables:
-```bash
-cp .env.example .env
-```
-Edit `.env` with your PostgreSQL credentials and JWT secret.
+## Database Model
 
-4. Set up PostgreSQL database (choose one option):
+The database contains six entities:
 
-**Option A - Docker (recommended):**
-```bash
-docker run -d --name riwimedicare-postgres \
-  -e POSTGRES_DB=riwimedicare_plus \
-  -e POSTGRES_USER=riwi_user \
-  -e POSTGRES_PASSWORD=riwi_password \
-  -p 5435:5432 \
-  -v riwimedicare_pgdata:/var/lib/postgresql/data \
-  postgres:16-alpine
-```
-Then set `DB_PORT=5435` in your `.env` file.
+- **User**: application account with an `ADMIN` or `REQUEST_MANAGER` role.
+- **Clinic**: a clinic identified by a unique NIT and assigned responsible user.
+- **Warehouse**: a physical medicine storage location.
+- **Medicine**: a medicine catalog entry.
+- **WarehouseMedicine**: the inventory record for one medicine in one warehouse.
+- **SupplyRequest**: a clinic request for a medicine from a warehouse.
 
-**Option B - Native PostgreSQL:**
-```sql
-CREATE DATABASE riwimedicare_plus;
-CREATE USER riwi_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE riwimedicare_plus TO riwi_user;
+`WarehouseMedicine` stores stock because a medicine can have a different quantity in each warehouse. The relationship is:
+
+```text
+Warehouse + Medicine → WarehouseMedicine → stock
 ```
+
+The composite unique constraint `(warehouseId, medicineId)` prevents duplicate inventory records for the same warehouse and medicine.
+
+## Authentication and Authorization
+
+Registration and login are public. Passwords are hashed with `bcryptjs`; a successful login returns a signed JWT containing `id`, `email`, and `role`. Protected endpoints require the header:
+
+```http
+Authorization: Bearer <token>
+```
+
+| Area | ADMIN | REQUEST_MANAGER |
+| --- | --- | --- |
+| Clinics | Full CRUD | No access |
+| Warehouses | Full CRUD | No access |
+| Medicines | Full CRUD | No access |
+| Warehouse medicines | Full CRUD | No access |
+| Seed upload | Allowed | No access |
+| Supply requests | Create, read, and update status | Create, read active/history/by ID, and update status |
+
+## Supply Request Business Rules
+
+### Request Creation
+
+Creating a request verifies that the clinic, medicine, and warehouse exist and are active; quantity is an integer greater than zero; the `WarehouseMedicine` inventory relation exists; and current stock is sufficient. The request is created with `PENDING` status. Stock is **not** reserved or reduced at creation.
+
+### Approval
+
+The transition `PENDING → APPROVED` runs in a Sequelize transaction. The inventory row is locked, stock is checked again, stock is reduced atomically, and the request status is updated. Any failure rolls back the transaction.
+
+### Other Transitions
+
+- `PENDING → REJECTED` consumes no stock.
+- `APPROVED → COMPLETED` performs no additional stock operation.
+- Any transition outside these rules is rejected.
+
+## Soft Deletion
+
+`User`, `Clinic`, `Warehouse`, `Medicine`, and `SupplyRequest` use Sequelize paranoid mode. Deleted records are retained in the database but excluded from ordinary queries. `WarehouseMedicine` is intentionally not paranoid because it is an inventory association record rather than a primary business entity.
+
+## Seed Upload
+
+`POST /api/seed/upload` requires a JWT with the `ADMIN` role. Submit `multipart/form-data` with a JSON file in the `file` field. Multer uses memory storage, accepts JSON files, and limits uploads to 5 MB.
+
+The upload is processed in one transaction in this order: users, clinics, warehouses, medicines, then warehouse medicines. Later records can safely reference records created earlier in the same file.
+
+```json
+{
+  "users": [{ "name": "Admin User", "email": "admin@example.com", "password": "secure123", "role": "ADMIN" }],
+  "clinics": [{ "name": "Central Clinic", "nit": "900123456-7", "responsibleUserEmail": "admin@example.com" }],
+  "warehouses": [{ "name": "Main Warehouse", "location": "Barranquilla" }],
+  "medicines": [{ "name": "Paracetamol", "description": "Analgesic" }],
+  "warehouseMedicines": [{ "warehouseName": "Main Warehouse", "medicineName": "Paracetamol", "stock": 100 }]
+}
+```
+
+## API Endpoints
+
+| Method | Route | Authentication / Role | Purpose |
+| --- | --- | --- | --- |
+| POST | `/api/auth/register` | Public | Register a user |
+| POST | `/api/auth/login` | Public | Login and obtain a JWT |
+| POST | `/api/clinics` | JWT / ADMIN | Create a clinic |
+| GET | `/api/clinics` | JWT / ADMIN | List clinics |
+| GET | `/api/clinics/:id` | JWT / ADMIN | Get a clinic |
+| PUT | `/api/clinics/:id` | JWT / ADMIN | Update a clinic |
+| DELETE | `/api/clinics/:id` | JWT / ADMIN | Soft delete a clinic |
+| POST | `/api/warehouses` | JWT / ADMIN | Create a warehouse |
+| GET | `/api/warehouses` | JWT / ADMIN | List warehouses |
+| GET | `/api/warehouses/:id` | JWT / ADMIN | Get a warehouse |
+| PUT | `/api/warehouses/:id` | JWT / ADMIN | Update a warehouse |
+| DELETE | `/api/warehouses/:id` | JWT / ADMIN | Soft delete a warehouse |
+| POST | `/api/medicines` | JWT / ADMIN | Create a medicine |
+| GET | `/api/medicines` | JWT / ADMIN | List medicines |
+| GET | `/api/medicines/:id` | JWT / ADMIN | Get a medicine |
+| PUT | `/api/medicines/:id` | JWT / ADMIN | Update a medicine |
+| DELETE | `/api/medicines/:id` | JWT / ADMIN | Soft delete a medicine |
+| POST | `/api/warehouse-medicines` | JWT / ADMIN | Create inventory |
+| GET | `/api/warehouse-medicines` | JWT / ADMIN | List inventory |
+| GET | `/api/warehouse-medicines/:id` | JWT / ADMIN | Get inventory |
+| PUT | `/api/warehouse-medicines/:id` | JWT / ADMIN | Update inventory |
+| DELETE | `/api/warehouse-medicines/:id` | JWT / ADMIN | Delete inventory |
+| POST | `/api/supply-requests` | JWT / ADMIN or REQUEST_MANAGER | Create a request |
+| GET | `/api/supply-requests` | JWT / ADMIN | List all requests |
+| GET | `/api/supply-requests/active` | JWT / ADMIN or REQUEST_MANAGER | List pending and approved requests |
+| GET | `/api/supply-requests/history/:clinicId` | JWT / ADMIN or REQUEST_MANAGER | Get a clinic request history |
+| GET | `/api/supply-requests/:id` | JWT / ADMIN or REQUEST_MANAGER | Get a request |
+| PUT | `/api/supply-requests/:id/status` | JWT / ADMIN or REQUEST_MANAGER | Update request status |
+| POST | `/api/seed/upload` | JWT / ADMIN | Upload seed JSON |
+| GET | `/health` | Public | Check API health |
 
 ## Environment Variables
 
-- `PORT`: Server port (default: 3000)
-- `NODE_ENV`: Environment (development/production)
-- `DB_HOST`: PostgreSQL host
-- `DB_PORT`: PostgreSQL port
-- `DB_NAME`: Database name
-- `DB_USER`: Database user
-- `DB_PASSWORD`: Database password
-- `JWT_SECRET`: Secret key for JWT signing
-- `JWT_EXPIRATION`: JWT token expiration time
+Copy the example file and replace placeholder values in your local `.env` file:
 
-## Running the Application
-
-Development mode:
 ```bash
+cp .env.example .env
+```
+
+| Variable | Description |
+| --- | --- |
+| `PORT` | HTTP server port, default `3000` |
+| `NODE_ENV` | Application environment |
+| `DB_HOST` | PostgreSQL hostname (`localhost` locally, `postgres` in Compose) |
+| `DB_PORT` | PostgreSQL port |
+| `DB_NAME` | PostgreSQL database name |
+| `DB_USER` | PostgreSQL user |
+| `DB_PASSWORD` | PostgreSQL password; use a local secret |
+| `JWT_SECRET` | Secret used to sign JWTs; use a strong local secret |
+| `JWT_EXPIRES_IN` | JWT lifetime, for example `24h` |
+| `SWAGGER_TITLE` | Swagger API title |
+| `SWAGGER_VERSION` | Swagger API version |
+| `SWAGGER_DESCRIPTION` | Swagger API description |
+
+Never commit `.env` or production credentials.
+
+## Installation and Local Development
+
+```bash
+git clone https://github.com/Nattrom/Prueba_Nodejs_Natalia_Romerin.git
+cd Prueba_Nodejs_Natalia_Romerin
+npm install
+cp .env.example .env
 npm run dev
 ```
 
-Production build:
+For local PostgreSQL, configure `DB_HOST=localhost` and the port exposed by your PostgreSQL installation or container. The application connects and synchronizes its Sequelize models at startup.
+
+## Production Build
+
 ```bash
 npm run build
 npm start
 ```
 
-## Run with Docker
+## Testing
 
-Docker Compose starts the API and PostgreSQL together. The API uses `postgres` as the database hostname inside Docker. Local development can continue using `localhost` in `.env`.
+```bash
+npm test
+npm test -- --coverage --runInBand
+```
+
+The project enforces a global coverage threshold above 40% for statements, branches, functions, and lines.
+
+## Docker
+
+Docker Compose starts separate API and PostgreSQL containers:
 
 ```bash
 docker compose build
 docker compose up -d
-```
-
-The default development database values are defined in `.env.example`. You can override `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, and `JWT_SECRET` through your shell environment or a local `.env` file. Do not use development credentials in production.
-
-## Check Containers
-
-```bash
 docker compose ps
 ```
 
-## View API Logs
+The API connects to PostgreSQL through the internal `riwimedicare-network` using the hostname `postgres`. PostgreSQL data is persisted in the named `postgres_data` volume. PostgreSQL uses `pg_isready` as a health check, and the API waits for that health check before startup.
 
 ```bash
 docker compose logs -f api
-```
-
-## Stop Containers
-
-```bash
 docker compose down
 ```
 
-The named `postgres_data` volume persists the database when containers are stopped with `docker compose down`.
+The API is available at `http://localhost:3000`.
 
-## API
+## Swagger
 
-```
-http://localhost:3000
-```
+Open Swagger UI at:
 
-## API Documentation
-
-Once the server is running, access Swagger UI at:
-```
+```text
 http://localhost:3000/api/docs
 ```
 
-## Health Check
+Swagger documents the implemented routes, request bodies, responses, and JWT Bearer authentication.
 
-Verify the server is running:
-```bash
-curl http://localhost:3000/health
+## Git Workflow
+
+```text
+main
+  ↑
+develop
+  ↑
+feature/*
 ```
+
+Develop features in `feature/*` branches, merge verified work into `develop`, and promote `develop` to `main` after final verification.
+
+## Conventional Commits
+
+Examples from this project:
+
+```text
+feat(auth): add JWT authentication and role-based authorization
+feat(clinics): add admin-only clinic CRUD with soft delete
+feat(docker): add Docker Compose support for API and PostgreSQL
+test: add service unit tests
+docs(swagger): document API endpoints
+```
+
+## Author
+
+- Coder: Natalia Romerin Rincon
+- Clan: Clan de NODE.JS/NEXT
+- Repository: https://github.com/Nattrom/Prueba_Nodejs_Natalia_Romerin

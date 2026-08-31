@@ -4,6 +4,11 @@ import { UserRole } from '../models/user.model';
 import { config } from '../config/environment';
 import { AuthenticatedUser } from '../types';
 
+/**
+ * Validates a Bearer JWT and attaches its verified identity to the request.
+ * Authorization is intentionally handled by a separate middleware so routes
+ * can reuse this check with different role requirements.
+ */
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authorizationHeader = req.headers.authorization;
 

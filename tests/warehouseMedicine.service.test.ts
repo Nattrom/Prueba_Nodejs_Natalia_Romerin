@@ -145,7 +145,7 @@ describe('WarehouseMedicine service', () => {
     expect(result.stock).toBe(25);
     expect(entry.update).toHaveBeenCalledWith({ stock: 25 });
 
-    await expect(warehouseMedicineService.updateWarehouseMedicine(9, {} as any)).rejects.toMatchObject({
+    await expect(warehouseMedicineService.updateWarehouseMedicine(9, {})).rejects.toMatchObject({
       statusCode: 400,
       message: 'No valid warehouse medicine fields were provided',
     });

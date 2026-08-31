@@ -185,7 +185,10 @@ const validateWarehouseMedicinePayload = (warehouseMedicine: Partial<SeedWarehou
 };
 
 /**
- * Process seed data within a single transaction.
+ * Processes dependent seed entities in creation order within one transaction.
+ * A later failure rolls back all prior inserts, preventing partial reference
+ * data such as clinics without their responsible users or inventory without
+ * its warehouse and medicine.
  */
 export const processSeedFile = async (fileBuffer: Buffer): Promise<SeedResult> => {
   const seedData = parseJsonFile(fileBuffer);
