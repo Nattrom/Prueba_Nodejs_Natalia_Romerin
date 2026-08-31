@@ -129,9 +129,11 @@ The transition `PENDING → APPROVED` runs in a Sequelize transaction. The inven
 
 ## Seed Upload
 
-`POST /api/seed/upload` requires a JWT with the `ADMIN` role. Submit `multipart/form-data` with a JSON file in the `file` field. Multer uses memory storage, accepts JSON files, and limits uploads to 5 MB.
+The seed endpoint accepts an administrator-provided JSON file rather than using hard-coded data. This implementation fulfills the endpoint-based seeding requirement and additionally provides input validation and transactional rollback.
 
-The upload is processed in one transaction in this order: users, clinics, warehouses, medicines, then warehouse medicines. Later records can safely reference records created earlier in the same file.
+`POST /api/seed/upload` is protected by JWT and restricted to the `ADMIN` role. Submit `multipart/form-data` with a JSON file in the `file` field. Multer handles the upload using memory storage, validates it as JSON, and limits files to 5 MB.
+
+The file is processed transactionally in dependency order: `Users → Clinics → Warehouses → Medicines → WarehouseMedicines`. Later records can safely reference records created earlier in the same file.
 
 ```json
 {
