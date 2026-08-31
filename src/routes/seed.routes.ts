@@ -84,6 +84,6 @@ const router = Router();
  *       500:
  *         description: Internal server error
  */
-router.post('/', authenticate, authorize(UserRole.ADMIN), upload.single('file'), uploadSeedFile);
+router.post('/upload', authenticate, authorize(UserRole.ADMIN), upload.single('file'), uploadSeedFile);
 
 export default router;
