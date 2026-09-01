@@ -5,10 +5,11 @@ import { AuthError } from '../services/auth.service';
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await authService.registerUser(req.body);
+    const authenticatedResponse = authService.createAuthenticatedResponse(user);
 
     res.status(201).json({
       message: 'User registered successfully',
-      data: user,
+      data: authenticatedResponse,
     });
   } catch (error) {
     const authError = error as AuthError;

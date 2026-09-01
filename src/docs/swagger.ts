@@ -28,6 +28,7 @@ const swaggerOptions = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
+          description: 'Paste only the value of data.token. Swagger adds the Bearer prefix automatically.',
         },
       },
       schemas: {

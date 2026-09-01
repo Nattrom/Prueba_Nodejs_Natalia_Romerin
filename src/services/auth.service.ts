@@ -44,6 +44,20 @@ const sanitizeUser = (user: User): SafeUser => ({
   role: user.role,
 });
 
+export const createAuthenticatedResponse = (user: SafeUser): AuthenticatedResponse => {
+  const payload: JwtPayload = {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+
+  const token = jwt.sign(payload, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'],
+  });
+
+  return { token, user };
+};
+
 const validateRegisterInput = (input: Partial<RegisterUserInput>): void => {
   if (typeof input.name !== 'string' || input.name.trim() === '') {
     throw makeAuthError('Name is required.', 400);
@@ -118,18 +132,5 @@ export const loginUser = async (input: LoginUserInput): Promise<AuthenticatedRes
     throw makeAuthError('Invalid email or password.', 401);
   }
 
-  const payload: JwtPayload = {
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  };
-
-  const token = jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'],
-  });
-
-  return {
-    token,
-    user: sanitizeUser(user),
-  };
+  return createAuthenticatedResponse(sanitizeUser(user));
 };

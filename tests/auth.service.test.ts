@@ -72,6 +72,21 @@ describe('Auth service', () => {
     });
   });
 
+  it('creates a token for a newly registered user', () => {
+    mockedJwt.sign.mockReturnValue('jwt-token');
+
+    const result = authService.createAuthenticatedResponse({
+      id: 1,
+      name: 'John Doe',
+      email: 'john@example.com',
+      role: UserRole.ADMIN,
+    });
+
+    expect(result.token).toBe('jwt-token');
+    expect(result.user.email).toBe('john@example.com');
+    expect(mockedJwt.sign).toHaveBeenCalled();
+  });
+
   it('logs in an existing user when the password is valid', async () => {
     mockedUserModel.findOne.mockResolvedValue({
       id: 5,

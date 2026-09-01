@@ -30,7 +30,7 @@ const router = Router();
  *                   type: string
  *                   example: User registered successfully
  *                 data:
- *                   $ref: '#/components/schemas/User'
+ *                   $ref: '#/components/schemas/AuthResponse'
  *       400:
  *         description: Invalid registration payload
  *         content:

@@ -1,0 +1,79 @@
+{
+  "users": [
+    {
+      "name": "Ana Martinez",
+      "email": "ana.martinez@riwimedicare.test",
+      "password": "Seed123",
+      "role": "ADMIN"
+    },
+    {
+      "name": "Carlos Gomez",
+      "email": "carlos.gomez@riwimedicare.test",
+      "password": "Seed123",
+      "role": "REQUEST_MANAGER"
+    }
+  ],
+  "clinics": [
+    {
+      "name": "Clinica Central",
+      "nit": "900123456-7",
+      "responsibleUserEmail": "carlos.gomez@riwimedicare.test"
+    },
+    {
+      "name": "Clinica del Norte",
+      "nit": "901234567-8",
+      "responsibleUserEmail": "ana.martinez@riwimedicare.test"
+    }
+  ],
+  "warehouses": [
+    {
+      "name": "Bodega Principal",
+      "location": "Medellin"
+    },
+    {
+      "name": "Bodega Norte",
+      "location": "Barranquilla"
+    }
+  ],
+  "medicines": [
+    {
+      "name": "Paracetamol 500 mg",
+      "description": "Analgesico y antipiretico"
+    },
+    {
+      "name": "Amoxicilina 500 mg",
+      "description": "Antibiotico de amplio espectro"
+    },
+    {
+      "name": "Ibuprofeno 400 mg",
+      "description": "Antiinflamatorio no esteroideo"
+    }
+  ],
+  "warehouseMedicines": [
+    {
+      "warehouseName": "Bodega Principal",
+      "medicineName": "Paracetamol 500 mg",
+      "stock": 500
+    },
+    {
+      "warehouseName": "Bodega Principal",
+      "medicineName": "Amoxicilina 500 mg",
+      "stock": 250
+    },
+    {
+      "warehouseName": "Bodega Principal",
+      "medicineName": "Ibuprofeno 400 mg",
+      "stock": 300
+    },
+    {
+      "warehouseName": "Bodega Norte",
+      "medicineName": "Paracetamol 500 mg",
+      "stock": 200
+    },
+    {
+      "warehouseName": "Bodega Norte",
+      "medicineName": "Ibuprofeno 400 mg",
+      "stock": 150
+    }
+  ]
+}
