@@ -219,7 +219,7 @@ export const processSeedFile = async (fileBuffer: Buffer): Promise<SeedResult> =
           throw makeSeedError(`User #${i}: duplicate email in uploaded file`, 409);
         }
 
-        // Check for duplicate in database
+        // Reuse existing user instead of failing when email already exists
         const existingUser = await User.findOne({
           where: { email: normalizedEmail },
           paranoid: false,
@@ -227,7 +227,8 @@ export const processSeedFile = async (fileBuffer: Buffer): Promise<SeedResult> =
         });
 
         if (existingUser) {
-          throw makeSeedError(`User #${i}: email already exists in database`, 409);
+          userEmailMap.set(normalizedEmail, existingUser.id);
+          continue;
         }
 
         const passwordHash = await bcrypt.hash(userPayload.password, BCRYPT_SALT_ROUNDS);

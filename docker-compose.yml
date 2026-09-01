@@ -26,6 +26,8 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    ports:
+      - "5435:5432"
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-riwimedicare_plus}
       POSTGRES_USER: ${POSTGRES_USER:-riwi_user}
