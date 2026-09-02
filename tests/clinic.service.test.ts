@@ -29,11 +29,16 @@ jest.mock('../src/models/clinic.model', () => ({
 const mockedUserModel = jest.mocked(User);
 const mockedClinicModel = jest.mocked(Clinic);
 
+/**
+ * Verify clinic creation and uniqueness rules.
+ * @description Covers responsible-user validation and NIT uniqueness.
+ */
 describe('Clinic service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Creates a clinic only after validating its responsible user and NIT. */
   it('creates a clinic when the responsible user exists and the NIT is unique', async () => {
     const responsibleUser = {
       id: 1,
@@ -81,6 +86,7 @@ describe('Clinic service', () => {
     });
   });
 
+  /** Prevents two clinics from sharing the same NIT. */
   it('rejects duplicate NIT values', async () => {
     mockedUserModel.findByPk.mockResolvedValue({
       id: 2,

@@ -14,11 +14,16 @@ jest.mock('../src/models/medicine.model', () => ({
 
 const mockedMedicine = jest.mocked(Medicine);
 
+/**
+ * Verify medicine CRUD behavior and validation.
+ * @description Covers creation, listing, retrieval, updates, and deletion.
+ */
 describe('Medicine service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Creates and serializes a medicine payload. */
   it('creates a medicine', async () => {
     mockedMedicine.create.mockResolvedValue({
       id: 1,
@@ -40,6 +45,7 @@ describe('Medicine service', () => {
     });
   });
 
+  /** Returns medicines ordered by newest creation date. */
   it('lists medicines in descending creation order', async () => {
     mockedMedicine.findAll.mockResolvedValue([
       { id: 2, name: 'Ibuprofen', description: null, createdAt: new Date(), updatedAt: new Date() },
@@ -52,6 +58,7 @@ describe('Medicine service', () => {
     expect(mockedMedicine.findAll).toHaveBeenCalledWith({ order: [['createdAt', 'DESC']] });
   });
 
+  /** Retrieves a medicine by its identifier. */
   it('gets a medicine by id', async () => {
     mockedMedicine.findByPk.mockResolvedValue({
       id: 7,
@@ -66,6 +73,7 @@ describe('Medicine service', () => {
     expect(result.description).toBe('Antibiotic');
   });
 
+  /** Updates valid fields and rejects an empty update payload. */
   it('updates a medicine and rejects missing fields', async () => {
   
     const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
@@ -98,6 +106,7 @@ describe('Medicine service', () => {
     });
   });
 
+  /** Soft-deletes an existing medicine. */
   it('deletes a medicine when it exists', async () => {
 
     const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();

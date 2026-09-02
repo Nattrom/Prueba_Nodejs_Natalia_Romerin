@@ -116,6 +116,11 @@ const assertUniqueNit = async (nit: string, clinicId?: number): Promise<void> =>
   }
 };
 
+/**
+ * Validate references and create a clinic with its responsible user.
+ * @param payload Clinic name, NIT, and responsible user ID.
+ * @returns The created clinic including its responsible user summary.
+ */
 export const createClinic = async (payload: ClinicPayload): Promise<ClinicResponse> => {
   const name = validateName(payload.name, 'Clinic name');
   const nit = validateNit(payload.nit);
@@ -139,6 +144,10 @@ export const createClinic = async (payload: ClinicPayload): Promise<ClinicRespon
   return serializeClinic(createdClinic);
 };
 
+/**
+ * List active clinics ordered from newest to oldest.
+ * @returns The serialized list of active clinics.
+ */
 export const listClinics = async (): Promise<ClinicResponse[]> => {
   const clinics = await Clinic.findAll({
     include: [
@@ -153,6 +162,11 @@ export const listClinics = async (): Promise<ClinicResponse[]> => {
   return clinics.map(serializeClinic);
 };
 
+/**
+ * Find and serialize one active clinic by ID.
+ * @param clinicId Identifier of the clinic to retrieve.
+ * @returns The requested clinic.
+ */
 export const getClinicById = async (clinicId: number): Promise<ClinicResponse> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {
     throw makeServiceError('Clinic ID is invalid', 400);
@@ -167,6 +181,12 @@ export const getClinicById = async (clinicId: number): Promise<ClinicResponse> =
   return serializeClinic(clinic);
 };
 
+/**
+ * Update the editable fields of an active clinic.
+ * @param clinicId Identifier of the clinic to update.
+ * @param payload Fields to update.
+ * @returns The updated clinic.
+ */
 export const updateClinic = async (clinicId: number, payload: ClinicPayload): Promise<ClinicResponse> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {
     throw makeServiceError('Clinic ID is invalid', 400);
@@ -215,6 +235,11 @@ export const updateClinic = async (clinicId: number, payload: ClinicPayload): Pr
   return serializeClinic(updatedClinic);
 };
 
+/**
+ * Soft-delete an active clinic.
+ * @param clinicId Identifier of the clinic to delete.
+ * @returns A success message.
+ */
 export const deleteClinic = async (clinicId: number): Promise<{ message: string }> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {
     throw makeServiceError('Clinic ID is invalid', 400);

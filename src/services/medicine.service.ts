@@ -64,6 +64,11 @@ const serializeMedicine = (medicine: Medicine): MedicineResponse => ({
   updatedAt: medicine.updatedAt,
 });
 
+/**
+ * Validate and create a medicine.
+ * @param payload Medicine name and optional description.
+ * @returns The created medicine.
+ */
 export const createMedicine = async (payload: MedicinePayload): Promise<MedicineResponse> => {
   const name = validateRequiredString(payload.name, 'Medicine name');
   const description = normalizeDescription(payload.description);
@@ -76,6 +81,10 @@ export const createMedicine = async (payload: MedicinePayload): Promise<Medicine
   return serializeMedicine(medicine);
 };
 
+/**
+ * List active medicines ordered from newest to oldest.
+ * @returns The serialized list of active medicines.
+ */
 export const listMedicines = async (): Promise<MedicineResponse[]> => {
   const medicines = await Medicine.findAll({
     order: [['createdAt', 'DESC']],
@@ -84,6 +93,11 @@ export const listMedicines = async (): Promise<MedicineResponse[]> => {
   return medicines.map(serializeMedicine);
 };
 
+/**
+ * Find and serialize one active medicine by ID.
+ * @param medicineId Identifier of the medicine to retrieve.
+ * @returns The requested medicine.
+ */
 export const getMedicineById = async (medicineId: number): Promise<MedicineResponse> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');
 
@@ -96,6 +110,12 @@ export const getMedicineById = async (medicineId: number): Promise<MedicineRespo
   return serializeMedicine(medicine);
 };
 
+/**
+ * Update the editable fields of an active medicine.
+ * @param medicineId Identifier of the medicine to update.
+ * @param payload Fields to update.
+ * @returns The updated medicine.
+ */
 export const updateMedicine = async (medicineId: number, payload: MedicinePayload): Promise<MedicineResponse> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');
 
@@ -124,6 +144,11 @@ export const updateMedicine = async (medicineId: number, payload: MedicinePayloa
   return serializeMedicine(medicine);
 };
 
+/**
+ * Soft-delete an active medicine.
+ * @param medicineId Identifier of the medicine to delete.
+ * @returns A success message.
+ */
 export const deleteMedicine = async (medicineId: number): Promise<{ message: string }> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');
 

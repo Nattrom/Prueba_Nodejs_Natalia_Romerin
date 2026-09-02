@@ -15,11 +15,16 @@ jest.mock('../src/models/warehouse.model', () => ({
 
 const mockedWarehouse = jest.mocked(Warehouse);
 
+/**
+ * Verify warehouse CRUD behavior and validation.
+ * @description Covers creation, listing, retrieval, updates, and deletion.
+ */
 describe('Warehouse service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Creates and serializes a warehouse payload. */
   it('creates a warehouse', async () => {
     mockedWarehouse.create.mockResolvedValue({
       id: 3,
@@ -41,6 +46,7 @@ describe('Warehouse service', () => {
     });
   });
 
+  /** Returns warehouses ordered by newest creation date. */
   it('lists warehouses', async () => {
     mockedWarehouse.findAll.mockResolvedValue([
       { id: 1, name: 'North', location: 'Cali', createdAt: new Date(), updatedAt: new Date() },
@@ -53,6 +59,7 @@ describe('Warehouse service', () => {
     expect(mockedWarehouse.findAll).toHaveBeenCalledWith({ order: [['createdAt', 'DESC']] });
   });
 
+  /** Retrieves a warehouse by its identifier. */
   it('gets a warehouse by id', async () => {
     mockedWarehouse.findByPk.mockResolvedValue({
       id: 9,
@@ -67,6 +74,7 @@ describe('Warehouse service', () => {
     expect(result.name).toBe('Central Storage');
   });
 
+  /** Updates valid fields and rejects an empty update payload. */
   it('updates a warehouse and blocks empty updates', async () => {
   
     const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
@@ -99,6 +107,7 @@ describe('Warehouse service', () => {
     });
   });
 
+  /** Soft-deletes an existing warehouse. */
   it('deletes a warehouse', async () => {
 
     const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();

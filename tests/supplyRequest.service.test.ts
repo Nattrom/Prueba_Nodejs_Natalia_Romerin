@@ -66,11 +66,16 @@ const mockedWarehouseMedicine = jest.mocked(WarehouseMedicine);
 const mockedSupplyRequest = jest.mocked(SupplyRequest);
 const mockedSequelize = jest.mocked(sequelize);
 
+/**
+ * Verify request creation, stock handling, and status transitions.
+ * @description Covers inventory checks and the request lifecycle.
+ */
 describe('SupplyRequest service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Creates a pending request when enough stock is available. */
   it('creates a pending request when the inventory is sufficient', async () => {
     mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' } as any);
     mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' } as any);
@@ -112,6 +117,7 @@ describe('SupplyRequest service', () => {
     });
   });
 
+  /** Rejects a request that exceeds the available inventory. */
   it('rejects creation when the stock is insufficient', async () => {
     mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' } as any);
     mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' } as any);
@@ -133,6 +139,7 @@ describe('SupplyRequest service', () => {
     expect(mockedSupplyRequest.create).not.toHaveBeenCalled();
   });
 
+  /** Rejects quantities that are not positive integers. */
   it('rejects invalid quantity values', async () => {
     await expect(
       supplyRequestService.createSupplyRequest({
@@ -147,6 +154,7 @@ describe('SupplyRequest service', () => {
     });
   });
 
+  /** Approves a pending request and decrements stock atomically. */
   it('approves a pending request and reduces stock inside a transaction', async () => {
     const transaction = {
       LOCK: { UPDATE: 'UPDATE' },
@@ -204,6 +212,7 @@ describe('SupplyRequest service', () => {
     expect(mockedSequelize.transaction).toHaveBeenCalledTimes(1);
   });
 
+  /** Rejects status transitions that violate the request lifecycle. */
   it('rejects an invalid transition like PENDING to COMPLETED', async () => {
     const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
 

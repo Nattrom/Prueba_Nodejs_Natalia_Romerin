@@ -171,6 +171,7 @@ const validateWarehouseMedicinePayload = (warehouseMedicine: Partial<SeedWarehou
     throw makeSeedError(`WarehouseMedicine #${index}: warehouseName is required`, 400);
   }
 
+  /** Process the uploaded seed file in one database transaction. */
   if (typeof warehouseMedicine.medicineName !== 'string' || warehouseMedicine.medicineName.trim() === '') {
     throw makeSeedError(`WarehouseMedicine #${index}: medicineName is required`, 400);
   }

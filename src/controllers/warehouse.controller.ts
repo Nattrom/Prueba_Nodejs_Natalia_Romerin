@@ -13,6 +13,12 @@ const handleControllerError = (error: unknown, res: Response): void => {
   res.status(statusCode).json({ message });
 };
 
+/**
+ * Create a warehouse from the request payload.
+ * @param req Express request containing warehouse data in the body.
+ * @param res Express response used to return the created warehouse.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const createWarehouse = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouse = await warehouseService.createWarehouse(req.body);
@@ -22,6 +28,12 @@ export const createWarehouse = async (req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * Return all active warehouses.
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the warehouses.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const listWarehouses = async (_req: Request, res: Response): Promise<void> => {
   try {
     const warehouses = await warehouseService.listWarehouses();
@@ -31,6 +43,12 @@ export const listWarehouses = async (_req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * Return a warehouse identified by its route parameter.
+ * @param req Express request containing the warehouse ID in `params.id`.
+ * @param res Express response used to return the warehouse.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const getWarehouseById = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseId = Number(req.params.id);
@@ -41,6 +59,12 @@ export const getWarehouseById = async (req: Request, res: Response): Promise<voi
   }
 };
 
+/**
+ * Update an existing warehouse.
+ * @param req Express request containing the warehouse ID and update body.
+ * @param res Express response used to return the updated warehouse.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const updateWarehouse = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseId = Number(req.params.id);
@@ -51,6 +75,12 @@ export const updateWarehouse = async (req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * Soft-delete a warehouse.
+ * @param req Express request containing the warehouse ID in `params.id`.
+ * @param res Express response used to return the operation result.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const deleteWarehouse = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseId = Number(req.params.id);

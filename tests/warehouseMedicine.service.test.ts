@@ -33,11 +33,16 @@ const mockedWarehouse = jest.mocked(Warehouse);
 const mockedMedicine = jest.mocked(Medicine);
 const mockedWarehouseMedicine = jest.mocked(WarehouseMedicine);
 
+/**
+ * Verify inventory CRUD behavior, stock validation, and active relations.
+ * @description Covers inventory references, stock changes, and soft deletion.
+ */
 describe('WarehouseMedicine service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Creates an inventory entry for valid warehouse and medicine references. */
   it('creates an inventory entry when warehouse, medicine and stock are valid', async () => {
     mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Main', location: 'Bogotá', deletedAt: null } as any);
     mockedMedicine.findByPk.mockResolvedValue({ id: 8, name: 'Ibuprofen', description: null, deletedAt: null } as any);
@@ -68,6 +73,7 @@ describe('WarehouseMedicine service', () => {
     });
   });
 
+  /** Excludes entries linked to soft-deleted warehouses or medicines. */
   it('lists only active warehouse-medicine entries', async () => {
     mockedWarehouseMedicine.findAll.mockResolvedValue([
       {
@@ -98,6 +104,7 @@ describe('WarehouseMedicine service', () => {
     expect(result[0].stock).toBe(8);
   });
 
+  /** Rejects records whose related warehouse or medicine is deleted. */
   it('gets a warehouse-medicine by id and rejects soft-deleted relations', async () => {
     mockedWarehouseMedicine.findByPk.mockResolvedValue({
       id: 15,
@@ -116,6 +123,7 @@ describe('WarehouseMedicine service', () => {
     });
   });
 
+  /** Updates stock and rejects invalid inventory payloads. */
   it('updates stock and validates payloads', async () => {
   
     const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
@@ -152,6 +160,7 @@ describe('WarehouseMedicine service', () => {
     });
   });
 
+  /** Soft-deletes an existing inventory entry. */
   it('deletes a warehouse-medicine entry', async () => {
 
     const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();

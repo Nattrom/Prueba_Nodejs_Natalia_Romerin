@@ -122,6 +122,11 @@ const assertUniqueWarehouseMedicine = async (warehouseId: number, medicineId: nu
   }
 };
 
+/**
+ * Validate references and create an inventory record.
+ * @param payload Warehouse, medicine, and initial stock values.
+ * @returns The created inventory record.
+ */
 export const createWarehouseMedicine = async (payload: WarehouseMedicinePayload): Promise<WarehouseMedicineResponse> => {
   const warehouseId = validatePositiveInteger(payload.warehouseId, 'Warehouse ID');
   const medicineId = validatePositiveInteger(payload.medicineId, 'Medicine ID');
@@ -151,6 +156,10 @@ export const createWarehouseMedicine = async (payload: WarehouseMedicinePayload)
   return serializeWarehouseMedicine(createdEntry);
 };
 
+/**
+ * List inventory records whose warehouse and medicine are active.
+ * @returns The serialized active inventory records.
+ */
 export const listWarehouseMedicines = async (): Promise<WarehouseMedicineResponse[]> => {
   const entries = (await WarehouseMedicine.findAll({
     include: [
@@ -169,6 +178,11 @@ export const listWarehouseMedicines = async (): Promise<WarehouseMedicineRespons
   return activeEntries.map(serializeWarehouseMedicine);
 };
 
+/**
+ * Find and serialize one active inventory record by ID.
+ * @param warehouseMedicineId Identifier of the inventory record.
+ * @returns The requested inventory record.
+ */
 export const getWarehouseMedicineById = async (warehouseMedicineId: number): Promise<WarehouseMedicineResponse> => {
   const validWarehouseMedicineId = validateId(warehouseMedicineId, 'Warehouse medicine ID');
 
@@ -193,6 +207,12 @@ export const getWarehouseMedicineById = async (warehouseMedicineId: number): Pro
   return serializeWarehouseMedicine(entry);
 };
 
+/**
+ * Update an inventory record after validating its references and stock.
+ * @param warehouseMedicineId Identifier of the inventory record to update.
+ * @param payload Fields to update.
+ * @returns The updated inventory record.
+ */
 export const updateWarehouseMedicine = async (
   warehouseMedicineId: number,
   payload: WarehouseMedicinePayload,
@@ -252,6 +272,11 @@ export const updateWarehouseMedicine = async (
   return serializeWarehouseMedicine(updatedEntry);
 };
 
+/**
+ * Soft-delete an active inventory record.
+ * @param warehouseMedicineId Identifier of the inventory record to delete.
+ * @returns A success message.
+ */
 export const deleteWarehouseMedicine = async (warehouseMedicineId: number): Promise<{ message: string }> => {
   const validWarehouseMedicineId = validateId(warehouseMedicineId, 'Warehouse medicine ID');
 

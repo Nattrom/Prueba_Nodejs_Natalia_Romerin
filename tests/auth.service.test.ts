@@ -32,11 +32,16 @@ const mockedUserModel = jest.mocked(User);
 const mockedBcrypt = jest.mocked(bcrypt);
 const mockedJwt = jest.mocked(jwt);
 
+/**
+ * Verify registration, token creation, and login behavior.
+ * @description Covers the authentication service public operations.
+ */
 describe('Auth service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
+  /** Persists a normalized user with a bcrypt hash. */
   it('registers a user with a hashed password', async () => {
 
     mockedUserModel.findOne.mockResolvedValue(null);
@@ -66,6 +71,7 @@ describe('Auth service', () => {
     });
   });
 
+  /** Returns a signed token and the safe user representation. */
   it('creates a token for a newly registered user', () => {
     mockedJwt.sign.mockReturnValue('jwt-token' as any);
 
@@ -81,6 +87,7 @@ describe('Auth service', () => {
     expect(mockedJwt.sign).toHaveBeenCalled();
   });
 
+  /** Authenticates an existing user when the password matches. */
   it('logs in an existing user when the password is valid', async () => {
     mockedUserModel.findOne.mockResolvedValue({
       id: 5,

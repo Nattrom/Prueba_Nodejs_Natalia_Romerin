@@ -44,6 +44,11 @@ const sanitizeUser = (user: User): SafeUser => ({
   role: user.role,
 });
 
+/**
+ * Build a JWT response without exposing the stored password.
+ * @param user Sanitized user data included in the token response.
+ * @returns The signed token and safe user data.
+ */
 export const createAuthenticatedResponse = (user: SafeUser): AuthenticatedResponse => {
   const payload: JwtPayload = {
     id: user.id,
@@ -94,6 +99,11 @@ const validateLoginInput = (input: Partial<LoginUserInput>): void => {
   }
 };
 
+/**
+ * Validate, normalize, hash, and persist a new user.
+ * @param input Registration data supplied by the caller.
+ * @returns The persisted user without its password.
+ */
 export const registerUser = async (input: RegisterUserInput): Promise<SafeUser> => {
   validateRegisterInput(input);
 
@@ -116,6 +126,11 @@ export const registerUser = async (input: RegisterUserInput): Promise<SafeUser> 
   return sanitizeUser(user);
 };
 
+/**
+ * Validate credentials and return a signed authentication response.
+ * @param input Login credentials supplied by the caller.
+ * @returns The signed token and authenticated user data.
+ */
 export const loginUser = async (input: LoginUserInput): Promise<AuthenticatedResponse> => {
   validateLoginInput(input);
 

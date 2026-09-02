@@ -15,6 +15,9 @@ const handleControllerError = (error: unknown, res: Response): void => {
 
 /**
  * Create a new supply request.
+ * @param req Express request containing supply request data in the body.
+ * @param res Express response used to return the created request.
+ * @returns A promise that resolves after the response is sent.
  */
 export const createSupplyRequest = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -27,6 +30,9 @@ export const createSupplyRequest = async (req: Request, res: Response): Promise<
 
 /**
  * List all active supply requests (ADMIN only).
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the requests.
+ * @returns A promise that resolves after the response is sent.
  */
 export const listAllSupplyRequests = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -39,6 +45,9 @@ export const listAllSupplyRequests = async (_req: Request, res: Response): Promi
 
 /**
  * List active/non-terminal supply requests (PENDING, APPROVED).
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the requests.
+ * @returns A promise that resolves after the response is sent.
  */
 export const listActiveSupplyRequests = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -51,6 +60,9 @@ export const listActiveSupplyRequests = async (_req: Request, res: Response): Pr
 
 /**
  * Get supply request history for a clinic.
+ * @param req Express request containing the clinic ID in `params.clinicId`.
+ * @param res Express response used to return the request history.
+ * @returns A promise that resolves after the response is sent.
  */
 export const getSupplyRequestHistoryByClinic = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -64,6 +76,9 @@ export const getSupplyRequestHistoryByClinic = async (req: Request, res: Respons
 
 /**
  * Get supply request by ID.
+ * @param req Express request containing the request ID in `params.id`.
+ * @param res Express response used to return the request.
+ * @returns A promise that resolves after the response is sent.
  */
 export const getSupplyRequestById = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -77,6 +92,9 @@ export const getSupplyRequestById = async (req: Request, res: Response): Promise
 
 /**
  * Update supply request status.
+ * @param req Express request containing the request ID and new status.
+ * @param res Express response used to return the updated request.
+ * @returns A promise that resolves after the response is sent.
  */
 export const updateSupplyRequestStatus = async (req: Request, res: Response): Promise<void> => {
   try {

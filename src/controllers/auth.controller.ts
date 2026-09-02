@@ -2,6 +2,12 @@ import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
 import { AuthError } from '../services/auth.service';
 
+/**
+ * Register a user and return an authenticated response.
+ * @param req Express request containing registration data in the body.
+ * @param res Express response used to return the new user and token.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await authService.registerUser(req.body);
@@ -22,6 +28,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+/**
+ * Authenticate a user with email and password.
+ * @param req Express request containing login credentials in the body.
+ * @param res Express response used to return the authentication result.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await authService.loginUser(req.body);

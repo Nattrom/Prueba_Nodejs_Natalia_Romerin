@@ -164,6 +164,8 @@ const serializeSupplyRequest = (
  * Create a new supply request.
  * The request is created with PENDING status.
  * Stock is NOT reserved at creation time.
+ * @param payload Clinic, medicine, warehouse, quantity, and optional notes.
+ * @returns The created pending supply request with related entities.
  */
 export const createSupplyRequest = async (payload: CreateSupplyRequestPayload): Promise<SupplyRequestResponse> => {
   const clinicId = validatePositiveInteger(payload.clinicId, 'Clinic ID');
@@ -217,6 +219,7 @@ export const createSupplyRequest = async (payload: CreateSupplyRequestPayload): 
 /**
  * List all active supply requests (non-deleted).
  * ADMIN only.
+ * @returns The serialized active supply requests.
  */
 export const listAllSupplyRequests = async (): Promise<SupplyRequestResponse[]> => {
   const requests = (await SupplyRequest.findAll({
@@ -238,6 +241,7 @@ export const listAllSupplyRequests = async (): Promise<SupplyRequestResponse[]> 
 /**
  * List active/non-terminal requests (PENDING, APPROVED).
  * ADMIN or REQUEST_MANAGER.
+ * @returns The serialized active supply requests.
  */
 export const listActiveSupplyRequests = async (): Promise<SupplyRequestResponse[]> => {
   const requests = (await SupplyRequest.findAll({
@@ -261,6 +265,8 @@ export const listActiveSupplyRequests = async (): Promise<SupplyRequestResponse[
 
 /**
  * Get request history for a specific clinic (all statuses).
+ * @param clinicId Identifier of the clinic whose history is requested.
+ * @returns The clinic's supply request history.
  */
 export const getSupplyRequestHistoryByClinic = async (clinicId: number): Promise<SupplyRequestResponse[]> => {
   const validClinicId = validatePositiveInteger(clinicId, 'Clinic ID');
@@ -287,6 +293,8 @@ export const getSupplyRequestHistoryByClinic = async (clinicId: number): Promise
 
 /**
  * Get supply request by ID.
+ * @param supplyRequestId Identifier of the request to retrieve.
+ * @returns The requested supply request with related entities.
  */
 export const getSupplyRequestById = async (supplyRequestId: number): Promise<SupplyRequestResponse> => {
   const validSupplyRequestId = validatePositiveInteger(supplyRequestId, 'Supply request ID');
@@ -329,6 +337,9 @@ const isValidStatusTransition = (currentStatus: RequestStatus, newStatus: Reques
  * PENDING → APPROVED: Uses transaction with inventory locking and reduction.
  * PENDING → REJECTED: Simple status update.
  * APPROVED → COMPLETED: Simple status update.
+ * @param supplyRequestId Identifier of the request to update.
+ * @param payload New status for the request.
+ * @returns The updated supply request with related entities.
  */
 export const updateSupplyRequestStatus = async (
   supplyRequestId: number,

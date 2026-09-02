@@ -13,6 +13,12 @@ const handleControllerError = (error: unknown, res: Response): void => {
   res.status(statusCode).json({ message });
 };
 
+/**
+ * Create a clinic from the request payload.
+ * @param req Express request containing clinic data in the body.
+ * @param res Express response used to return the created clinic.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const createClinic = async (req: Request, res: Response): Promise<void> => {
   try {
     const clinic = await clinicService.createClinic(req.body);
@@ -22,6 +28,12 @@ export const createClinic = async (req: Request, res: Response): Promise<void> =
   }
 };
 
+/**
+ * Return all registered clinics.
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the clinics.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const listClinics = async (_req: Request, res: Response): Promise<void> => {
   try {
     const clinics = await clinicService.listClinics();
@@ -31,6 +43,12 @@ export const listClinics = async (_req: Request, res: Response): Promise<void> =
   }
 };
 
+/**
+ * Return a clinic identified by its route parameter.
+ * @param req Express request containing the clinic ID in `params.id`.
+ * @param res Express response used to return the clinic.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const getClinicById = async (req: Request, res: Response): Promise<void> => {
   try {
     const clinicId = Number(req.params.id);
@@ -41,6 +59,12 @@ export const getClinicById = async (req: Request, res: Response): Promise<void> 
   }
 };
 
+/**
+ * Update an existing clinic.
+ * @param req Express request containing the clinic ID and update body.
+ * @param res Express response used to return the updated clinic.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const updateClinic = async (req: Request, res: Response): Promise<void> => {
   try {
     const clinicId = Number(req.params.id);
@@ -51,6 +75,12 @@ export const updateClinic = async (req: Request, res: Response): Promise<void> =
   }
 };
 
+/**
+ * Soft-delete a clinic.
+ * @param req Express request containing the clinic ID in `params.id`.
+ * @param res Express response used to return the operation result.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const deleteClinic = async (req: Request, res: Response): Promise<void> => {
   try {
     const clinicId = Number(req.params.id);

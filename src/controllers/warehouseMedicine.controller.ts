@@ -13,6 +13,12 @@ const handleControllerError = (error: unknown, res: Response): void => {
   res.status(statusCode).json({ message });
 };
 
+/**
+ * Create an inventory record for a warehouse and medicine.
+ * @param req Express request containing inventory data in the body.
+ * @param res Express response used to return the created record.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const createWarehouseMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const record = await warehouseMedicineService.createWarehouseMedicine(req.body);
@@ -22,6 +28,12 @@ export const createWarehouseMedicine = async (req: Request, res: Response): Prom
   }
 };
 
+/**
+ * Return all active warehouse-medicine inventory records.
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the inventory records.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const listWarehouseMedicines = async (_req: Request, res: Response): Promise<void> => {
   try {
     const records = await warehouseMedicineService.listWarehouseMedicines();
@@ -31,6 +43,12 @@ export const listWarehouseMedicines = async (_req: Request, res: Response): Prom
   }
 };
 
+/**
+ * Return an inventory record identified by its route parameter.
+ * @param req Express request containing the record ID in `params.id`.
+ * @param res Express response used to return the inventory record.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const getWarehouseMedicineById = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseMedicineId = Number(req.params.id);
@@ -41,6 +59,12 @@ export const getWarehouseMedicineById = async (req: Request, res: Response): Pro
   }
 };
 
+/**
+ * Update the stock or associations of an inventory record.
+ * @param req Express request containing the record ID and update body.
+ * @param res Express response used to return the updated record.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const updateWarehouseMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseMedicineId = Number(req.params.id);
@@ -51,6 +75,12 @@ export const updateWarehouseMedicine = async (req: Request, res: Response): Prom
   }
 };
 
+/**
+ * Soft-delete an inventory record.
+ * @param req Express request containing the record ID in `params.id`.
+ * @param res Express response used to return the operation result.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const deleteWarehouseMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const warehouseMedicineId = Number(req.params.id);

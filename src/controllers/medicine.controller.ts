@@ -13,6 +13,12 @@ const handleControllerError = (error: unknown, res: Response): void => {
   res.status(statusCode).json({ message });
 };
 
+/**
+ * Create a medicine from the request payload.
+ * @param req Express request containing medicine data in the body.
+ * @param res Express response used to return the created medicine.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const createMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const medicine = await medicineService.createMedicine(req.body);
@@ -22,6 +28,12 @@ export const createMedicine = async (req: Request, res: Response): Promise<void>
   }
 };
 
+/**
+ * Return all active medicines.
+ * @param _req Express request, unused by this collection endpoint.
+ * @param res Express response used to return the medicines.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const listMedicines = async (_req: Request, res: Response): Promise<void> => {
   try {
     const medicines = await medicineService.listMedicines();
@@ -31,6 +43,12 @@ export const listMedicines = async (_req: Request, res: Response): Promise<void>
   }
 };
 
+/**
+ * Return a medicine identified by its route parameter.
+ * @param req Express request containing the medicine ID in `params.id`.
+ * @param res Express response used to return the medicine.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const getMedicineById = async (req: Request, res: Response): Promise<void> => {
   try {
     const medicineId = Number(req.params.id);
@@ -41,6 +59,12 @@ export const getMedicineById = async (req: Request, res: Response): Promise<void
   }
 };
 
+/**
+ * Update an existing medicine.
+ * @param req Express request containing the medicine ID and update body.
+ * @param res Express response used to return the updated medicine.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const updateMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const medicineId = Number(req.params.id);
@@ -51,6 +75,12 @@ export const updateMedicine = async (req: Request, res: Response): Promise<void>
   }
 };
 
+/**
+ * Soft-delete a medicine.
+ * @param req Express request containing the medicine ID in `params.id`.
+ * @param res Express response used to return the operation result.
+ * @returns A promise that resolves after the response is sent.
+ */
 export const deleteMedicine = async (req: Request, res: Response): Promise<void> => {
   try {
     const medicineId = Number(req.params.id);

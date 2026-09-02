@@ -15,6 +15,9 @@ const handleControllerError = (error: unknown, res: Response): void => {
 
 /**
  * Handle seed file upload.
+ * @param req Express request containing the uploaded JSON file.
+ * @param res Express response used to return the seed summary.
+ * @returns A promise that resolves after the response is sent.
  */
 export const uploadSeedFile = async (req: Request, res: Response): Promise<void> => {
   try {

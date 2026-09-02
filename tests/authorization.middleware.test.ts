@@ -12,6 +12,10 @@ interface ResponseSpies {
   json: jest.Mock;
 }
 
+/**
+ * Create an Express response double with status and JSON spies.
+ * @returns The response double and its tracked methods.
+ */
 const createResponse = (): ResponseSpies => {
   const status = jest.fn();
   const json = jest.fn();
@@ -24,7 +28,9 @@ const createResponse = (): ResponseSpies => {
   };
 };
 
+/** Verify authentication and role-based access decisions. */
 describe('Authorization middleware', () => {
+  /** Denies protected routes when no token is provided. */
   it('returns 401 when a protected route has no JWT', () => {
     const request = { headers: {} } as unknown as Request;
     const { response, status, json } = createResponse();
@@ -37,6 +43,7 @@ describe('Authorization middleware', () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  /** Denies a request manager from accessing an admin-only route. */
   it('returns 403 when a REQUEST_MANAGER token accesses an ADMIN-only route', () => {
     const token = jwt.sign(
       { id: 2, email: 'manager@example.com', role: UserRole.REQUEST_MANAGER },

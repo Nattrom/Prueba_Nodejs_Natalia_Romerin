@@ -47,6 +47,11 @@ const serializeWarehouse = (warehouse: Warehouse): WarehouseResponse => ({
   updatedAt: warehouse.updatedAt,
 });
 
+/**
+ * Validate and create a warehouse.
+ * @param payload Warehouse name and location.
+ * @returns The created warehouse.
+ */
 export const createWarehouse = async (payload: WarehousePayload): Promise<WarehouseResponse> => {
   const name = validateRequiredString(payload.name, 'Warehouse name');
   const location = validateRequiredString(payload.location, 'Warehouse location');
@@ -56,6 +61,10 @@ export const createWarehouse = async (payload: WarehousePayload): Promise<Wareho
   return serializeWarehouse(warehouse);
 };
 
+/**
+ * List active warehouses ordered from newest to oldest.
+ * @returns The serialized list of active warehouses.
+ */
 export const listWarehouses = async (): Promise<WarehouseResponse[]> => {
   const warehouses = await Warehouse.findAll({
     order: [['createdAt', 'DESC']],
@@ -64,6 +73,11 @@ export const listWarehouses = async (): Promise<WarehouseResponse[]> => {
   return warehouses.map(serializeWarehouse);
 };
 
+/**
+ * Find and serialize one active warehouse by ID.
+ * @param warehouseId Identifier of the warehouse to retrieve.
+ * @returns The requested warehouse.
+ */
 export const getWarehouseById = async (warehouseId: number): Promise<WarehouseResponse> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');
 
@@ -76,6 +90,12 @@ export const getWarehouseById = async (warehouseId: number): Promise<WarehouseRe
   return serializeWarehouse(warehouse);
 };
 
+/**
+ * Update the editable fields of an active warehouse.
+ * @param warehouseId Identifier of the warehouse to update.
+ * @param payload Fields to update.
+ * @returns The updated warehouse.
+ */
 export const updateWarehouse = async (warehouseId: number, payload: WarehousePayload): Promise<WarehouseResponse> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');
 
@@ -104,6 +124,11 @@ export const updateWarehouse = async (warehouseId: number, payload: WarehousePay
   return serializeWarehouse(warehouse);
 };
 
+/**
+ * Soft-delete an active warehouse.
+ * @param warehouseId Identifier of the warehouse to delete.
+ * @returns A success message.
+ */
 export const deleteWarehouse = async (warehouseId: number): Promise<{ message: string }> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');
 
