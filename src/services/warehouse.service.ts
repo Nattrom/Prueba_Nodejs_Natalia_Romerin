@@ -1,10 +1,12 @@
 import Warehouse from '../models/warehouse.model';
 
+/** Fields accepted when creating or partially updating a warehouse. */
 export interface WarehousePayload {
   name?: string;
   location?: string;
 }
 
+/** Public warehouse representation returned by this service. */
 export interface WarehouseResponse {
   id: number;
   name: string;
@@ -13,6 +15,7 @@ export interface WarehouseResponse {
   updatedAt: Date;
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface ServiceError extends Error {
   statusCode: number;
 }
@@ -51,6 +54,7 @@ const serializeWarehouse = (warehouse: Warehouse): WarehouseResponse => ({
  * Validate and create a warehouse.
  * @param payload Warehouse name and location.
  * @returns The created warehouse.
+ * @throws {ServiceError} When either required field is absent or invalid.
  */
 export const createWarehouse = async (payload: WarehousePayload): Promise<WarehouseResponse> => {
   const name = validateRequiredString(payload.name, 'Warehouse name');
@@ -77,6 +81,7 @@ export const listWarehouses = async (): Promise<WarehouseResponse[]> => {
  * Find and serialize one active warehouse by ID.
  * @param warehouseId Identifier of the warehouse to retrieve.
  * @returns The requested warehouse.
+ * @throws {ServiceError} When the identifier is invalid or the warehouse does not exist.
  */
 export const getWarehouseById = async (warehouseId: number): Promise<WarehouseResponse> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');
@@ -95,6 +100,7 @@ export const getWarehouseById = async (warehouseId: number): Promise<WarehouseRe
  * @param warehouseId Identifier of the warehouse to update.
  * @param payload Fields to update.
  * @returns The updated warehouse.
+ * @throws {ServiceError} When no editable field is supplied or a field is invalid.
  */
 export const updateWarehouse = async (warehouseId: number, payload: WarehousePayload): Promise<WarehouseResponse> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');
@@ -128,6 +134,7 @@ export const updateWarehouse = async (warehouseId: number, payload: WarehousePay
  * Soft-delete an active warehouse.
  * @param warehouseId Identifier of the warehouse to delete.
  * @returns A success message.
+ * @throws {ServiceError} When the identifier is invalid or the warehouse is already unavailable.
  */
 export const deleteWarehouse = async (warehouseId: number): Promise<{ message: string }> => {
   const validWarehouseId = validateId(warehouseId, 'Warehouse ID');

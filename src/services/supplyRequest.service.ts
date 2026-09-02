@@ -6,6 +6,7 @@ import Medicine from '../models/medicine.model';
 import Warehouse from '../models/warehouse.model';
 import WarehouseMedicine from '../models/warehouseMedicine.model';
 
+/** Data required to create a pending medicine supply request. */
 export interface CreateSupplyRequestPayload {
   clinicId?: number;
   medicineId?: number;
@@ -14,10 +15,12 @@ export interface CreateSupplyRequestPayload {
   notes?: string | null;
 }
 
+/** New lifecycle status requested for an existing supply request. */
 export interface UpdateSupplyRequestStatusPayload {
   status?: string;
 }
 
+/** Supply request returned with optional summaries of its related entities. */
 export interface SupplyRequestResponse {
   id: number;
   clinicId: number;
@@ -45,6 +48,7 @@ export interface SupplyRequestResponse {
   updatedAt: Date;
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface ServiceError extends Error {
   statusCode: number;
 }
@@ -166,6 +170,7 @@ const serializeSupplyRequest = (
  * Stock is NOT reserved at creation time.
  * @param payload Clinic, medicine, warehouse, quantity, and optional notes.
  * @returns The created pending supply request with related entities.
+ * @throws {ServiceError} When a reference is missing, quantity is invalid, or current stock is insufficient.
  */
 export const createSupplyRequest = async (payload: CreateSupplyRequestPayload): Promise<SupplyRequestResponse> => {
   const clinicId = validatePositiveInteger(payload.clinicId, 'Clinic ID');
@@ -267,6 +272,7 @@ export const listActiveSupplyRequests = async (): Promise<SupplyRequestResponse[
  * Get request history for a specific clinic (all statuses).
  * @param clinicId Identifier of the clinic whose history is requested.
  * @returns The clinic's supply request history.
+ * @throws {ServiceError} When the clinic identifier is invalid or the clinic does not exist.
  */
 export const getSupplyRequestHistoryByClinic = async (clinicId: number): Promise<SupplyRequestResponse[]> => {
   const validClinicId = validatePositiveInteger(clinicId, 'Clinic ID');
@@ -295,6 +301,7 @@ export const getSupplyRequestHistoryByClinic = async (clinicId: number): Promise
  * Get supply request by ID.
  * @param supplyRequestId Identifier of the request to retrieve.
  * @returns The requested supply request with related entities.
+ * @throws {ServiceError} When the identifier is invalid or the request does not exist.
  */
 export const getSupplyRequestById = async (supplyRequestId: number): Promise<SupplyRequestResponse> => {
   const validSupplyRequestId = validatePositiveInteger(supplyRequestId, 'Supply request ID');
@@ -319,7 +326,12 @@ export const getSupplyRequestById = async (supplyRequestId: number): Promise<Sup
 };
 
 /**
- * Validate status transition.
+ * Determine whether a requested lifecycle transition is permitted.
+ * Terminal states cannot transition further; approval and rejection are only
+ * available from PENDING, while completion is only available from APPROVED.
+ * @param currentStatus Persisted request status.
+ * @param newStatus Requested status.
+ * @returns Whether the transition is included in the allowed state graph.
  */
 const isValidStatusTransition = (currentStatus: RequestStatus, newStatus: RequestStatus): boolean => {
   const validTransitions: Record<RequestStatus, RequestStatus[]> = {
@@ -340,6 +352,7 @@ const isValidStatusTransition = (currentStatus: RequestStatus, newStatus: Reques
  * @param supplyRequestId Identifier of the request to update.
  * @param payload New status for the request.
  * @returns The updated supply request with related entities.
+ * @throws {ServiceError} When the request is unavailable, the transition is invalid, or approval lacks stock.
  */
 export const updateSupplyRequestStatus = async (
   supplyRequestId: number,
@@ -388,7 +401,11 @@ export const updateSupplyRequestStatus = async (
 /**
  * Approve supply request with transaction-based inventory management.
  * This is the critical function that prevents race conditions and ensures
- * inventory integrity.
+ * inventory integrity. It locks the inventory row, verifies stock again,
+ * decreases it, and marks the request APPROVED atomically.
+ * @param request Persisted pending request to approve.
+ * @returns The approved request with its related entities.
+ * @throws {ServiceError} When inventory is absent or insufficient inside the transaction.
  */
 const approveSupplyRequest = async (request: SupplyRequest): Promise<SupplyRequestResponse> => {
   return sequelize.transaction(async (transaction: Transaction) => {

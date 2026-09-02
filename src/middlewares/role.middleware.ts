@@ -4,6 +4,10 @@ import { UserRole } from '../models/user.model';
 /**
  * Restricts a route to authenticated users whose JWT role is explicitly
  * allowed by that route. It must run after the authentication middleware.
+ *
+ * @param allowedRoles Roles that may continue to the protected route.
+ * @returns An Express middleware that returns 401 when `req.user` is absent
+ * or 403 when its role is not allowed.
  */
 export const authorize = (...allowedRoles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {

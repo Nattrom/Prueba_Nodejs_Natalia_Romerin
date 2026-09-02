@@ -1,10 +1,11 @@
 import multer from 'multer';
 
 /**
- * Configure Multer for JSON file uploads.
- * - Memory storage (files not persisted to disk)
- * - Accept JSON files only
- * - Max file size: 5 MB
+ * Multer middleware for seed-data uploads.
+ * Stores the uploaded file only in memory, accepts files identified as JSON
+ * by MIME type or `.json` extension, and rejects files larger than 5 MB.
+ * Controllers must read the resulting buffer from `req.file`; no file is
+ * persisted on the server filesystem.
  */
 const upload = multer({
   storage: multer.memoryStorage(),

@@ -8,6 +8,11 @@ import { AuthenticatedUser } from '../types';
  * Validates a Bearer JWT and attaches its verified identity to the request.
  * Authorization is intentionally handled by a separate middleware so routes
  * can reuse this check with different role requirements.
+ *
+ * @param req Express request containing the Authorization header.
+ * @param res Express response used to return 401 authentication errors.
+ * @param next Continues the request pipeline after assigning `req.user`.
+ * @returns Nothing; it either calls `next` or ends the response with 401.
  */
 export const authenticate = (req: Request, res: Response, next: NextFunction): void => {
   const authorizationHeader = req.headers.authorization;

@@ -1,10 +1,12 @@
 import Medicine from '../models/medicine.model';
 
+/** Fields accepted when creating or partially updating a medicine. */
 export interface MedicinePayload {
   name?: string;
   description?: string | null;
 }
 
+/** Public medicine representation returned by this service. */
 export interface MedicineResponse {
   id: number;
   name: string;
@@ -13,6 +15,7 @@ export interface MedicineResponse {
   updatedAt: Date;
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface ServiceError extends Error {
   statusCode: number;
 }
@@ -68,6 +71,7 @@ const serializeMedicine = (medicine: Medicine): MedicineResponse => ({
  * Validate and create a medicine.
  * @param payload Medicine name and optional description.
  * @returns The created medicine.
+ * @throws {ServiceError} When the name or description has an invalid format.
  */
 export const createMedicine = async (payload: MedicinePayload): Promise<MedicineResponse> => {
   const name = validateRequiredString(payload.name, 'Medicine name');
@@ -97,6 +101,7 @@ export const listMedicines = async (): Promise<MedicineResponse[]> => {
  * Find and serialize one active medicine by ID.
  * @param medicineId Identifier of the medicine to retrieve.
  * @returns The requested medicine.
+ * @throws {ServiceError} When the identifier is invalid or the medicine does not exist.
  */
 export const getMedicineById = async (medicineId: number): Promise<MedicineResponse> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');
@@ -115,6 +120,7 @@ export const getMedicineById = async (medicineId: number): Promise<MedicineRespo
  * @param medicineId Identifier of the medicine to update.
  * @param payload Fields to update.
  * @returns The updated medicine.
+ * @throws {ServiceError} When no editable field is supplied or a field is invalid.
  */
 export const updateMedicine = async (medicineId: number, payload: MedicinePayload): Promise<MedicineResponse> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');
@@ -148,6 +154,7 @@ export const updateMedicine = async (medicineId: number, payload: MedicinePayloa
  * Soft-delete an active medicine.
  * @param medicineId Identifier of the medicine to delete.
  * @returns A success message.
+ * @throws {ServiceError} When the identifier is invalid or the medicine is already unavailable.
  */
 export const deleteMedicine = async (medicineId: number): Promise<{ message: string }> => {
   const validMedicineId = validateId(medicineId, 'Medicine ID');

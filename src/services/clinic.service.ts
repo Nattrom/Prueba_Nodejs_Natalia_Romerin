@@ -1,6 +1,7 @@
 import User, { UserRole } from '../models/user.model';
 import Clinic from '../models/clinic.model';
 
+/** Summary of the user responsible for a clinic. */
 interface ResponsibleUserSummary {
   id: number;
   name: string;
@@ -9,6 +10,7 @@ interface ResponsibleUserSummary {
 }
 
 type ClinicWithResponsibleUser = Clinic & {
+/** Fields accepted when creating or partially updating a clinic. */
   responsibleUser?: ResponsibleUserSummary;
 };
 
@@ -18,6 +20,7 @@ export interface ClinicPayload {
   responsibleUserId?: number;
 }
 
+/** Clinic data returned by the service, including its responsible user when loaded. */
 export interface ClinicResponse {
   id: number;
   name: string;
@@ -33,6 +36,7 @@ export interface ClinicResponse {
   updatedAt: Date;
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface ServiceError extends Error {
   statusCode: number;
 }
@@ -120,6 +124,7 @@ const assertUniqueNit = async (nit: string, clinicId?: number): Promise<void> =>
  * Validate references and create a clinic with its responsible user.
  * @param payload Clinic name, NIT, and responsible user ID.
  * @returns The created clinic including its responsible user summary.
+ * @throws {ServiceError} When data is invalid, the responsible user is absent, or the NIT is duplicated.
  */
 export const createClinic = async (payload: ClinicPayload): Promise<ClinicResponse> => {
   const name = validateName(payload.name, 'Clinic name');
@@ -166,6 +171,7 @@ export const listClinics = async (): Promise<ClinicResponse[]> => {
  * Find and serialize one active clinic by ID.
  * @param clinicId Identifier of the clinic to retrieve.
  * @returns The requested clinic.
+ * @throws {ServiceError} When the identifier is invalid or the clinic does not exist.
  */
 export const getClinicById = async (clinicId: number): Promise<ClinicResponse> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {
@@ -186,6 +192,7 @@ export const getClinicById = async (clinicId: number): Promise<ClinicResponse> =
  * @param clinicId Identifier of the clinic to update.
  * @param payload Fields to update.
  * @returns The updated clinic.
+ * @throws {ServiceError} When no editable field is supplied, references are invalid, or the NIT is duplicated.
  */
 export const updateClinic = async (clinicId: number, payload: ClinicPayload): Promise<ClinicResponse> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {
@@ -239,6 +246,7 @@ export const updateClinic = async (clinicId: number, payload: ClinicPayload): Pr
  * Soft-delete an active clinic.
  * @param clinicId Identifier of the clinic to delete.
  * @returns A success message.
+ * @throws {ServiceError} When the identifier is invalid or the clinic is already unavailable.
  */
 export const deleteClinic = async (clinicId: number): Promise<{ message: string }> => {
   if (!Number.isInteger(clinicId) || clinicId <= 0) {

@@ -2,12 +2,14 @@ import Warehouse from '../models/warehouse.model';
 import Medicine from '../models/medicine.model';
 import WarehouseMedicine from '../models/warehouseMedicine.model';
 
+/** Fields accepted when creating or partially updating an inventory record. */
 export interface WarehouseMedicinePayload {
   warehouseId?: number;
   medicineId?: number;
   stock?: number;
 }
 
+/** Inventory record with optional summaries of its related warehouse and medicine. */
 export interface WarehouseMedicineResponse {
   id: number;
   warehouseId: number;
@@ -27,6 +29,7 @@ export interface WarehouseMedicineResponse {
   updatedAt: Date;
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface ServiceError extends Error {
   statusCode: number;
 }
@@ -126,6 +129,7 @@ const assertUniqueWarehouseMedicine = async (warehouseId: number, medicineId: nu
  * Validate references and create an inventory record.
  * @param payload Warehouse, medicine, and initial stock values.
  * @returns The created inventory record.
+ * @throws {ServiceError} When references are absent, stock is invalid, or the pair already exists.
  */
 export const createWarehouseMedicine = async (payload: WarehouseMedicinePayload): Promise<WarehouseMedicineResponse> => {
   const warehouseId = validatePositiveInteger(payload.warehouseId, 'Warehouse ID');
@@ -159,6 +163,7 @@ export const createWarehouseMedicine = async (payload: WarehouseMedicinePayload)
 /**
  * List inventory records whose warehouse and medicine are active.
  * @returns The serialized active inventory records.
+ * @remarks Entries linked to soft-deleted warehouses or medicines are omitted.
  */
 export const listWarehouseMedicines = async (): Promise<WarehouseMedicineResponse[]> => {
   const entries = (await WarehouseMedicine.findAll({
@@ -182,6 +187,7 @@ export const listWarehouseMedicines = async (): Promise<WarehouseMedicineRespons
  * Find and serialize one active inventory record by ID.
  * @param warehouseMedicineId Identifier of the inventory record.
  * @returns The requested inventory record.
+ * @throws {ServiceError} When the identifier is invalid, absent, or linked to inactive data.
  */
 export const getWarehouseMedicineById = async (warehouseMedicineId: number): Promise<WarehouseMedicineResponse> => {
   const validWarehouseMedicineId = validateId(warehouseMedicineId, 'Warehouse medicine ID');
@@ -212,6 +218,7 @@ export const getWarehouseMedicineById = async (warehouseMedicineId: number): Pro
  * @param warehouseMedicineId Identifier of the inventory record to update.
  * @param payload Fields to update.
  * @returns The updated inventory record.
+ * @throws {ServiceError} When no field is supplied, validation fails, or the resulting pair is duplicated.
  */
 export const updateWarehouseMedicine = async (
   warehouseMedicineId: number,
@@ -276,6 +283,7 @@ export const updateWarehouseMedicine = async (
  * Soft-delete an active inventory record.
  * @param warehouseMedicineId Identifier of the inventory record to delete.
  * @returns A success message.
+ * @throws {ServiceError} When the identifier is invalid or the record does not exist.
  */
 export const deleteWarehouseMedicine = async (warehouseMedicineId: number): Promise<{ message: string }> => {
   const validWarehouseMedicineId = validateId(warehouseMedicineId, 'Warehouse medicine ID');

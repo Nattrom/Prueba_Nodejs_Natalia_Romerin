@@ -10,9 +10,7 @@ import WarehouseMedicine from '../models/warehouseMedicine.model';
 const MIN_PASSWORD_LENGTH = 6;
 const BCRYPT_SALT_ROUNDS = 10;
 
-/**
- * Seed file payload types
- */
+/** Account record accepted in the uploaded seed document. */
 export interface SeedUserPayload {
   name: string;
   email: string;
@@ -20,28 +18,33 @@ export interface SeedUserPayload {
   role: string;
 }
 
+/** Clinic record accepted in the uploaded seed document. */
 export interface SeedClinicPayload {
   name: string;
   nit: string;
   responsibleUserEmail: string;
 }
 
+/** Warehouse record accepted in the uploaded seed document. */
 export interface SeedWarehousePayload {
   name: string;
   location: string;
 }
 
+/** Medicine record accepted in the uploaded seed document. */
 export interface SeedMedicinePayload {
   name: string;
   description?: string | null;
 }
 
+/** Inventory record that references uploaded warehouse and medicine names. */
 export interface SeedWarehouseMedicinePayload {
   warehouseName: string;
   medicineName: string;
   stock: number;
 }
 
+/** Supported top-level sections of an uploaded seed JSON document. */
 export interface SeedFilePayload {
   users?: SeedUserPayload[];
   clinics?: SeedClinicPayload[];
@@ -50,6 +53,7 @@ export interface SeedFilePayload {
   warehouseMedicines?: SeedWarehouseMedicinePayload[];
 }
 
+/** Summary of records created after a successful transactional seed import. */
 export interface SeedResult {
   message: string;
   created: {
@@ -61,6 +65,7 @@ export interface SeedResult {
   };
 }
 
+/** Error enriched with the HTTP status expected by controllers. */
 interface SeedError extends Error {
   statusCode: number;
 }
@@ -76,7 +81,10 @@ const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 const isValidEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 /**
- * Parse and validate uploaded JSON file.
+ * Parse an uploaded buffer and ensure its root is a JSON object.
+ * @param fileBuffer Raw uploaded file contents held in memory by Multer.
+ * @returns The parsed seed document, before validation of individual records.
+ * @throws {SeedError} When the buffer is not valid JSON or has an invalid root value.
  */
 const parseJsonFile = (fileBuffer: Buffer): SeedFilePayload => {
   let jsonData: unknown;
@@ -96,7 +104,10 @@ const parseJsonFile = (fileBuffer: Buffer): SeedFilePayload => {
 };
 
 /**
- * Validate individual user payload.
+ * Validate an individual user record before it is inserted.
+ * @param user User record to validate.
+ * @param index Zero-based position used in validation errors.
+ * @throws {SeedError} When a required field, email, password, or role is invalid.
  */
 const validateUserPayload = (user: Partial<SeedUserPayload>, index: number): void => {
   if (typeof user.name !== 'string' || user.name.trim() === '') {
@@ -125,7 +136,10 @@ const validateUserPayload = (user: Partial<SeedUserPayload>, index: number): voi
 };
 
 /**
- * Validate individual clinic payload.
+ * Validate an individual clinic record before resolving its responsible user.
+ * @param clinic Clinic record to validate.
+ * @param index Zero-based position used in validation errors.
+ * @throws {SeedError} When a required clinic field is absent.
  */
 const validateClinicPayload = (clinic: Partial<SeedClinicPayload>, index: number): void => {
   if (typeof clinic.name !== 'string' || clinic.name.trim() === '') {
@@ -142,7 +156,10 @@ const validateClinicPayload = (clinic: Partial<SeedClinicPayload>, index: number
 };
 
 /**
- * Validate individual warehouse payload.
+ * Validate an individual warehouse record.
+ * @param warehouse Warehouse record to validate.
+ * @param index Zero-based position used in validation errors.
+ * @throws {SeedError} When name or location is absent.
  */
 const validateWarehousePayload = (warehouse: Partial<SeedWarehousePayload>, index: number): void => {
   if (typeof warehouse.name !== 'string' || warehouse.name.trim() === '') {
@@ -155,7 +172,10 @@ const validateWarehousePayload = (warehouse: Partial<SeedWarehousePayload>, inde
 };
 
 /**
- * Validate individual medicine payload.
+ * Validate an individual medicine record.
+ * @param medicine Medicine record to validate.
+ * @param index Zero-based position used in validation errors.
+ * @throws {SeedError} When the medicine name is absent.
  */
 const validateMedicinePayload = (medicine: Partial<SeedMedicinePayload>, index: number): void => {
   if (typeof medicine.name !== 'string' || medicine.name.trim() === '') {
@@ -164,14 +184,16 @@ const validateMedicinePayload = (medicine: Partial<SeedMedicinePayload>, index: 
 };
 
 /**
- * Validate individual warehouseMedicine payload.
+ * Validate an individual warehouse-medicine inventory record.
+ * @param warehouseMedicine Inventory record to validate.
+ * @param index Zero-based position used in validation errors.
+ * @throws {SeedError} When a reference name or stock value is invalid.
  */
 const validateWarehouseMedicinePayload = (warehouseMedicine: Partial<SeedWarehouseMedicinePayload>, index: number): void => {
   if (typeof warehouseMedicine.warehouseName !== 'string' || warehouseMedicine.warehouseName.trim() === '') {
     throw makeSeedError(`WarehouseMedicine #${index}: warehouseName is required`, 400);
   }
 
-  /** Process the uploaded seed file in one database transaction. */
   if (typeof warehouseMedicine.medicineName !== 'string' || warehouseMedicine.medicineName.trim() === '') {
     throw makeSeedError(`WarehouseMedicine #${index}: medicineName is required`, 400);
   }
@@ -190,6 +212,9 @@ const validateWarehouseMedicinePayload = (warehouseMedicine: Partial<SeedWarehou
  * A later failure rolls back all prior inserts, preventing partial reference
  * data such as clinics without their responsible users or inventory without
  * its warehouse and medicine.
+ * @param fileBuffer Raw JSON file contents provided by the upload middleware.
+ * @returns A success message and the number of records created by type.
+ * @throws {SeedError} When the file, a record, a reference, or a uniqueness rule is invalid.
  */
 export const processSeedFile = async (fileBuffer: Buffer): Promise<SeedResult> => {
   const seedData = parseJsonFile(fileBuffer);
