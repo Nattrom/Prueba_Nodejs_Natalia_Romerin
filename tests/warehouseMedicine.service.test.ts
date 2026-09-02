@@ -1,3 +1,10 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+
+import Warehouse from '../src/models/warehouse.model';
+import Medicine from '../src/models/medicine.model';
+import WarehouseMedicine from '../src/models/warehouseMedicine.model';
+import * as warehouseMedicineService from '../src/services/warehouseMedicine.service';
+
 jest.mock('../src/models/warehouse.model', () => ({
   __esModule: true,
   default: {
@@ -22,19 +29,9 @@ jest.mock('../src/models/warehouseMedicine.model', () => ({
   },
 }));
 
-import Warehouse from '../src/models/warehouse.model';
-import Medicine from '../src/models/medicine.model';
-import WarehouseMedicine from '../src/models/warehouseMedicine.model';
-import * as warehouseMedicineService from '../src/services/warehouseMedicine.service';
-
-const mockedWarehouse = Warehouse as unknown as { findByPk: jest.Mock };
-const mockedMedicine = Medicine as unknown as { findByPk: jest.Mock };
-const mockedWarehouseMedicine = WarehouseMedicine as unknown as {
-  findOne: jest.Mock;
-  findAll: jest.Mock;
-  findByPk: jest.Mock;
-  create: jest.Mock;
-};
+const mockedWarehouse = jest.mocked(Warehouse);
+const mockedMedicine = jest.mocked(Medicine);
+const mockedWarehouseMedicine = jest.mocked(WarehouseMedicine);
 
 describe('WarehouseMedicine service', () => {
   beforeEach(() => {
@@ -42,10 +39,10 @@ describe('WarehouseMedicine service', () => {
   });
 
   it('creates an inventory entry when warehouse, medicine and stock are valid', async () => {
-    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Main', location: 'Bogotá', deletedAt: null });
-    mockedMedicine.findByPk.mockResolvedValue({ id: 8, name: 'Ibuprofen', description: null, deletedAt: null });
+    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Main', location: 'Bogotá', deletedAt: null } as any);
+    mockedMedicine.findByPk.mockResolvedValue({ id: 8, name: 'Ibuprofen', description: null, deletedAt: null } as any);
     mockedWarehouseMedicine.findOne.mockResolvedValue(null);
-    mockedWarehouseMedicine.create.mockResolvedValue({ id: 12, warehouseId: 3, medicineId: 8, stock: 50 });
+    mockedWarehouseMedicine.create.mockResolvedValue({ id: 12, warehouseId: 3, medicineId: 8, stock: 50 } as any);
     mockedWarehouseMedicine.findByPk.mockResolvedValue({
       id: 12,
       warehouseId: 3,
@@ -55,7 +52,7 @@ describe('WarehouseMedicine service', () => {
       medicine: { id: 8, name: 'Ibuprofen', description: null },
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await warehouseMedicineService.createWarehouseMedicine({
       warehouseId: 3,
@@ -93,7 +90,7 @@ describe('WarehouseMedicine service', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);
+    ] as any);
 
     const result = await warehouseMedicineService.listWarehouseMedicines();
 
@@ -111,7 +108,7 @@ describe('WarehouseMedicine service', () => {
       medicine: { id: 2, name: 'Ibuprofen', description: null, deletedAt: new Date() },
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    } as any);
 
     await expect(warehouseMedicineService.getWarehouseMedicineById(15)).rejects.toMatchObject({
       statusCode: 404,
@@ -120,15 +117,19 @@ describe('WarehouseMedicine service', () => {
   });
 
   it('updates stock and validates payloads', async () => {
+  
+    const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+    mockUpdate.mockResolvedValue(undefined);
+
     const entry = {
       id: 9,
       warehouseId: 3,
       medicineId: 8,
       stock: 10,
-      update: jest.fn().mockResolvedValue(undefined),
+      update: mockUpdate,
     };
 
-    mockedWarehouseMedicine.findByPk.mockResolvedValueOnce(entry).mockResolvedValueOnce({
+    mockedWarehouseMedicine.findByPk.mockResolvedValueOnce(entry as any).mockResolvedValueOnce({
       id: 9,
       warehouseId: 3,
       medicineId: 8,
@@ -137,7 +138,7 @@ describe('WarehouseMedicine service', () => {
       medicine: { id: 8, name: 'Ibuprofen', description: null },
       createdAt: new Date(),
       updatedAt: new Date(),
-    });
+    } as any);
     mockedWarehouseMedicine.findOne.mockResolvedValue(null);
 
     const result = await warehouseMedicineService.updateWarehouseMedicine(9, { stock: 25 });
@@ -152,15 +153,19 @@ describe('WarehouseMedicine service', () => {
   });
 
   it('deletes a warehouse-medicine entry', async () => {
+
+    const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();
+    mockDestroy.mockResolvedValue(undefined);
+
     const entry = {
       id: 17,
       warehouseId: 2,
       medicineId: 3,
       stock: 4,
-      destroy: jest.fn().mockResolvedValue(undefined),
+      destroy: mockDestroy,
     };
 
-    mockedWarehouseMedicine.findByPk.mockResolvedValue(entry);
+    mockedWarehouseMedicine.findByPk.mockResolvedValue(entry as any);
 
     const result = await warehouseMedicineService.deleteWarehouseMedicine(17);
 

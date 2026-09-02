@@ -1,3 +1,13 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+
+import sequelize from '../src/config/database';
+import Clinic from '../src/models/clinic.model';
+import Medicine from '../src/models/medicine.model';
+import Warehouse from '../src/models/warehouse.model';
+import WarehouseMedicine from '../src/models/warehouseMedicine.model';
+import SupplyRequest, { RequestStatus } from '../src/models/supplyRequest.model';
+import * as supplyRequestService from '../src/services/supplyRequest.service';
+
 jest.mock('../src/models/clinic.model', () => ({
   __esModule: true,
   default: {
@@ -49,20 +59,12 @@ jest.mock('../src/config/database', () => ({
   },
 }));
 
-import sequelize from '../src/config/database';
-import Clinic from '../src/models/clinic.model';
-import Medicine from '../src/models/medicine.model';
-import Warehouse from '../src/models/warehouse.model';
-import WarehouseMedicine from '../src/models/warehouseMedicine.model';
-import SupplyRequest, { RequestStatus } from '../src/models/supplyRequest.model';
-import * as supplyRequestService from '../src/services/supplyRequest.service';
-
-const mockedClinic = Clinic as unknown as { findByPk: jest.Mock };
-const mockedMedicine = Medicine as unknown as { findByPk: jest.Mock };
-const mockedWarehouse = Warehouse as unknown as { findByPk: jest.Mock };
-const mockedWarehouseMedicine = WarehouseMedicine as unknown as { findOne: jest.Mock };
-const mockedSupplyRequest = SupplyRequest as unknown as { create: jest.Mock; findByPk: jest.Mock; findAll: jest.Mock };
-const mockedSequelize = sequelize as unknown as { transaction: jest.Mock };
+const mockedClinic = jest.mocked(Clinic);
+const mockedMedicine = jest.mocked(Medicine);
+const mockedWarehouse = jest.mocked(Warehouse);
+const mockedWarehouseMedicine = jest.mocked(WarehouseMedicine);
+const mockedSupplyRequest = jest.mocked(SupplyRequest);
+const mockedSequelize = jest.mocked(sequelize);
 
 describe('SupplyRequest service', () => {
   beforeEach(() => {
@@ -70,11 +72,11 @@ describe('SupplyRequest service', () => {
   });
 
   it('creates a pending request when the inventory is sufficient', async () => {
-    mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' });
-    mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' });
-    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Warehouse 1', location: 'Street 1' });
-    mockedWarehouseMedicine.findOne.mockResolvedValue({ id: 6, warehouseId: 3, medicineId: 2, stock: 120 });
-    mockedSupplyRequest.create.mockResolvedValue({ id: 11, clinicId: 1, medicineId: 2, warehouseId: 3, quantity: 10, status: RequestStatus.PENDING, notes: null });
+    mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' } as any);
+    mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' } as any);
+    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Warehouse 1', location: 'Street 1' } as any);
+    mockedWarehouseMedicine.findOne.mockResolvedValue({ id: 6, warehouseId: 3, medicineId: 2, stock: 120 } as any);
+    mockedSupplyRequest.create.mockResolvedValue({ id: 11, clinicId: 1, medicineId: 2, warehouseId: 3, quantity: 10, status: RequestStatus.PENDING, notes: null } as any);
     mockedSupplyRequest.findByPk.mockResolvedValue({
       id: 11,
       clinicId: 1,
@@ -88,7 +90,7 @@ describe('SupplyRequest service', () => {
       warehouse: { id: 3, name: 'Warehouse 1', location: 'Street 1' },
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await supplyRequestService.createSupplyRequest({
       clinicId: 1,
@@ -111,10 +113,10 @@ describe('SupplyRequest service', () => {
   });
 
   it('rejects creation when the stock is insufficient', async () => {
-    mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' });
-    mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' });
-    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Warehouse 1', location: 'Street 1' });
-    mockedWarehouseMedicine.findOne.mockResolvedValue({ id: 6, warehouseId: 3, medicineId: 2, stock: 4 });
+    mockedClinic.findByPk.mockResolvedValue({ id: 1, name: 'Clinic A', nit: '123' } as any);
+    mockedMedicine.findByPk.mockResolvedValue({ id: 2, name: 'Aspirin', description: 'Pain reliever' } as any);
+    mockedWarehouse.findByPk.mockResolvedValue({ id: 3, name: 'Warehouse 1', location: 'Street 1' } as any);
+    mockedWarehouseMedicine.findOne.mockResolvedValue({ id: 6, warehouseId: 3, medicineId: 2, stock: 4 } as any);
 
     await expect(
       supplyRequestService.createSupplyRequest({
@@ -150,7 +152,10 @@ describe('SupplyRequest service', () => {
       LOCK: { UPDATE: 'UPDATE' },
     };
 
-    const mockUpdate = jest.fn().mockResolvedValue(undefined);
+    // 3. TIPADO CORRECTO: Definimos mocks de funciones asíncronas para evitar el error 'never'
+    const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+    mockUpdate.mockResolvedValue(undefined);
+
     const pendingRequest = {
       id: 50,
       clinicId: 1,
@@ -163,16 +168,19 @@ describe('SupplyRequest service', () => {
       deletedAt: null,
     };
 
+    const mockWarehouseUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+    mockWarehouseUpdate.mockResolvedValue(undefined);
+
     const warehouseEntry = {
       id: 7,
       warehouseId: 3,
       medicineId: 2,
       stock: 20,
-      update: jest.fn().mockResolvedValue(undefined),
+      update: mockWarehouseUpdate,
     };
 
-    mockedSequelize.transaction.mockImplementation(async (callback) => callback(transaction));
-    mockedSupplyRequest.findByPk.mockResolvedValueOnce(pendingRequest).mockResolvedValueOnce({
+    mockedSequelize.transaction.mockImplementation(async (callback: any) => callback(transaction));
+    mockedSupplyRequest.findByPk.mockResolvedValueOnce(pendingRequest as any).mockResolvedValueOnce({
       id: 50,
       clinicId: 1,
       medicineId: 2,
@@ -185,8 +193,8 @@ describe('SupplyRequest service', () => {
       warehouse: { id: 3, name: 'Warehouse 1', location: 'Street 1' },
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-    });
-    mockedWarehouseMedicine.findOne.mockResolvedValue(warehouseEntry);
+    } as any);
+    mockedWarehouseMedicine.findOne.mockResolvedValue(warehouseEntry as any);
 
     const result = await supplyRequestService.updateSupplyRequestStatus(50, { status: RequestStatus.APPROVED });
 
@@ -197,6 +205,8 @@ describe('SupplyRequest service', () => {
   });
 
   it('rejects an invalid transition like PENDING to COMPLETED', async () => {
+    const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+
     const pendingRequest = {
       id: 20,
       clinicId: 1,
@@ -206,10 +216,10 @@ describe('SupplyRequest service', () => {
       status: RequestStatus.PENDING,
       notes: null,
       deletedAt: null,
-      update: jest.fn(),
+      update: mockUpdate,
     };
 
-    mockedSupplyRequest.findByPk.mockResolvedValue(pendingRequest);
+    mockedSupplyRequest.findByPk.mockResolvedValue(pendingRequest as any);
 
     await expect(
       supplyRequestService.updateSupplyRequestStatus(20, { status: RequestStatus.COMPLETED })

@@ -4,6 +4,7 @@ import { config } from '../src/config/environment';
 import { authenticate } from '../src/middlewares/auth.middleware';
 import { authorize } from '../src/middlewares/role.middleware';
 import { UserRole } from '../src/models/user.model';
+import {jest, describe, expect, it} from "@jest/globals"
 
 interface ResponseSpies {
   response: Response;

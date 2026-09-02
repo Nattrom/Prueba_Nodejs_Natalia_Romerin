@@ -1,3 +1,8 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+
+import Warehouse from '../src/models/warehouse.model';
+import * as warehouseService from '../src/services/warehouse.service';
+
 jest.mock('../src/models/warehouse.model', () => ({
   __esModule: true,
   default: {
@@ -7,14 +12,8 @@ jest.mock('../src/models/warehouse.model', () => ({
   },
 }));
 
-import Warehouse from '../src/models/warehouse.model';
-import * as warehouseService from '../src/services/warehouse.service';
 
-const mockedWarehouse = Warehouse as unknown as {
-  create: jest.Mock;
-  findAll: jest.Mock;
-  findByPk: jest.Mock;
-};
+const mockedWarehouse = jest.mocked(Warehouse);
 
 describe('Warehouse service', () => {
   beforeEach(() => {
@@ -28,7 +27,7 @@ describe('Warehouse service', () => {
       location: 'Bogotá',
       createdAt: new Date('2024-01-02T00:00:00.000Z'),
       updatedAt: new Date('2024-01-02T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await warehouseService.createWarehouse({
       name: 'Main warehouse',
@@ -46,7 +45,7 @@ describe('Warehouse service', () => {
     mockedWarehouse.findAll.mockResolvedValue([
       { id: 1, name: 'North', location: 'Cali', createdAt: new Date(), updatedAt: new Date() },
       { id: 2, name: 'South', location: 'Medellín', createdAt: new Date(), updatedAt: new Date() },
-    ]);
+    ] as any);
 
     const result = await warehouseService.listWarehouses();
 
@@ -61,7 +60,7 @@ describe('Warehouse service', () => {
       location: 'Cartagena',
       createdAt: new Date('2024-03-03T00:00:00.000Z'),
       updatedAt: new Date('2024-03-03T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await warehouseService.getWarehouseById(9);
 
@@ -69,20 +68,25 @@ describe('Warehouse service', () => {
   });
 
   it('updates a warehouse and blocks empty updates', async () => {
+  
+    const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+
     const existingWarehouse = {
       id: 5,
       name: 'Old warehouse',
       location: 'Barranquilla',
       deletedAt: null,
-      update: jest.fn().mockImplementation(async (payload) => {
-        Object.assign(existingWarehouse, payload);
-        return existingWarehouse;
-      }),
+      update: mockUpdate,
       createdAt: new Date('2024-04-04T00:00:00.000Z'),
       updatedAt: new Date('2024-04-04T00:00:00.000Z'),
     };
 
-    mockedWarehouse.findByPk.mockResolvedValue(existingWarehouse);
+    mockUpdate.mockImplementation(async (payload) => {
+      Object.assign(existingWarehouse, payload);
+      return existingWarehouse;
+    });
+
+    mockedWarehouse.findByPk.mockResolvedValue(existingWarehouse as any);
 
     const updated = await warehouseService.updateWarehouse(5, { location: 'Pereira' });
 
@@ -96,15 +100,19 @@ describe('Warehouse service', () => {
   });
 
   it('deletes a warehouse', async () => {
+
+    const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();
+    mockDestroy.mockResolvedValue(undefined);
+
     const warehouse = {
       id: 10,
       name: 'Backup warehouse',
       location: 'Tunja',
       deletedAt: null,
-      destroy: jest.fn().mockResolvedValue(undefined),
+      destroy: mockDestroy,
     };
 
-    mockedWarehouse.findByPk.mockResolvedValue(warehouse);
+    mockedWarehouse.findByPk.mockResolvedValue(warehouse as any);
 
     const result = await warehouseService.deleteWarehouse(10);
 

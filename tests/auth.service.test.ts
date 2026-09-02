@@ -1,3 +1,9 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User, { UserRole } from '../src/models/user.model';
+import * as authService from '../src/services/auth.service';
+
 jest.mock('../src/models/user.model', () => ({
   __esModule: true,
   default: {
@@ -22,22 +28,9 @@ jest.mock('jsonwebtoken', () => ({
   },
 }));
 
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User, { UserRole } from '../src/models/user.model';
-import * as authService from '../src/services/auth.service';
-
-const mockedUserModel = User as unknown as {
-  findOne: jest.Mock;
-  create: jest.Mock;
-};
-const mockedBcrypt = bcrypt as unknown as {
-  hash: jest.Mock;
-  compare: jest.Mock;
-};
-const mockedJwt = jwt as unknown as {
-  sign: jest.Mock;
-};
+const mockedUserModel = jest.mocked(User);
+const mockedBcrypt = jest.mocked(bcrypt);
+const mockedJwt = jest.mocked(jwt);
 
 describe('Auth service', () => {
   beforeEach(() => {
@@ -45,15 +38,16 @@ describe('Auth service', () => {
   });
 
   it('registers a user with a hashed password', async () => {
+
     mockedUserModel.findOne.mockResolvedValue(null);
-    mockedBcrypt.hash.mockResolvedValue('hashed-password');
+    mockedBcrypt.hash.mockResolvedValue('hashed-password' as any); 
     mockedUserModel.create.mockResolvedValue({
       id: 1,
       name: 'John Doe',
       email: 'john@example.com',
       password: 'hashed-password',
       role: UserRole.ADMIN,
-    });
+    } as any);
 
     const result = await authService.registerUser({
       name: 'John Doe',
@@ -73,7 +67,7 @@ describe('Auth service', () => {
   });
 
   it('creates a token for a newly registered user', () => {
-    mockedJwt.sign.mockReturnValue('jwt-token');
+    mockedJwt.sign.mockReturnValue('jwt-token' as any);
 
     const result = authService.createAuthenticatedResponse({
       id: 1,
@@ -94,9 +88,9 @@ describe('Auth service', () => {
       email: 'jane@example.com',
       password: 'hashed-pass',
       role: UserRole.REQUEST_MANAGER,
-    });
-    mockedBcrypt.compare.mockResolvedValue(true);
-    mockedJwt.sign.mockReturnValue('jwt-token');
+    } as any);
+    mockedBcrypt.compare.mockResolvedValue(true as any);
+    mockedJwt.sign.mockReturnValue('jwt-token' as any);
 
     const result = await authService.loginUser({
       email: 'Jane@Example.com',

@@ -1,3 +1,9 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+
+import User from '../src/models/user.model';
+import Clinic from '../src/models/clinic.model';
+import * as clinicService from '../src/services/clinic.service';
+
 jest.mock('../src/models/user.model', () => ({
   __esModule: true,
   default: {
@@ -19,20 +25,9 @@ jest.mock('../src/models/clinic.model', () => ({
   },
 }));
 
-import User from '../src/models/user.model';
-import Clinic from '../src/models/clinic.model';
-import * as clinicService from '../src/services/clinic.service';
 
-const mockedUserModel = User as unknown as {
-  findByPk: jest.Mock;
-};
-
-const mockedClinicModel = Clinic as unknown as {
-  findByPk: jest.Mock;
-  findOne: jest.Mock;
-  create: jest.Mock;
-  findAll: jest.Mock;
-};
+const mockedUserModel = jest.mocked(User);
+const mockedClinicModel = jest.mocked(Clinic);
 
 describe('Clinic service', () => {
   beforeEach(() => {
@@ -47,7 +42,8 @@ describe('Clinic service', () => {
       role: 'ADMIN',
     };
 
-    mockedUserModel.findByPk.mockResolvedValue(responsibleUser);
+    
+    mockedUserModel.findByPk.mockResolvedValue(responsibleUser as any);
     mockedClinicModel.findOne.mockResolvedValue(null);
     mockedClinicModel.create.mockResolvedValue({
       id: 10,
@@ -56,7 +52,7 @@ describe('Clinic service', () => {
       responsibleUserId: 1,
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-    });
+    } as any);
     mockedClinicModel.findByPk.mockResolvedValue({
       id: 10,
       name: 'Central Clinic',
@@ -65,7 +61,7 @@ describe('Clinic service', () => {
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
       responsibleUser: responsibleUser,
-    });
+    } as any);
 
     const result = await clinicService.createClinic({
       name: 'Central Clinic',
@@ -91,9 +87,9 @@ describe('Clinic service', () => {
       name: 'Jane Doe',
       email: 'jane@example.com',
       role: 'ADMIN',
-    });
+    } as any);
 
-    mockedClinicModel.findOne.mockResolvedValue({ id: 5 });
+    mockedClinicModel.findOne.mockResolvedValue({ id: 5 } as any);
 
     await expect(
       clinicService.createClinic({

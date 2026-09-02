@@ -1,3 +1,8 @@
+import { jest, describe, expect, it, beforeEach } from "@jest/globals";
+
+import Medicine from '../src/models/medicine.model';
+import * as medicineService from '../src/services/medicine.service';
+
 jest.mock('../src/models/medicine.model', () => ({
   __esModule: true,
   default: {
@@ -7,14 +12,7 @@ jest.mock('../src/models/medicine.model', () => ({
   },
 }));
 
-import Medicine from '../src/models/medicine.model';
-import * as medicineService from '../src/services/medicine.service';
-
-const mockedMedicine = Medicine as unknown as {
-  create: jest.Mock;
-  findAll: jest.Mock;
-  findByPk: jest.Mock;
-};
+const mockedMedicine = jest.mocked(Medicine);
 
 describe('Medicine service', () => {
   beforeEach(() => {
@@ -28,7 +26,7 @@ describe('Medicine service', () => {
       description: 'For pain',
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await medicineService.createMedicine({
       name: 'Paracetamol',
@@ -46,7 +44,7 @@ describe('Medicine service', () => {
     mockedMedicine.findAll.mockResolvedValue([
       { id: 2, name: 'Ibuprofen', description: null, createdAt: new Date(), updatedAt: new Date() },
       { id: 1, name: 'Paracetamol', description: 'For pain', createdAt: new Date(), updatedAt: new Date() },
-    ]);
+    ] as any);
 
     const result = await medicineService.listMedicines();
 
@@ -61,7 +59,7 @@ describe('Medicine service', () => {
       description: 'Antibiotic',
       createdAt: new Date('2024-03-01T00:00:00.000Z'),
       updatedAt: new Date('2024-03-01T00:00:00.000Z'),
-    });
+    } as any);
 
     const result = await medicineService.getMedicineById(7);
 
@@ -69,20 +67,25 @@ describe('Medicine service', () => {
   });
 
   it('updates a medicine and rejects missing fields', async () => {
+  
+    const mockUpdate = jest.fn<(...args: any[]) => Promise<any>>();
+    
     const existingMedicine = {
       id: 4,
       name: 'Old name',
       description: 'Old description',
       deletedAt: null,
-      update: jest.fn().mockImplementation(async (payload) => {
-        Object.assign(existingMedicine, payload);
-        return existingMedicine;
-      }),
+      update: mockUpdate,
       createdAt: new Date('2024-04-01T00:00:00.000Z'),
       updatedAt: new Date('2024-04-01T00:00:00.000Z'),
     };
 
-    mockedMedicine.findByPk.mockResolvedValue(existingMedicine);
+    mockUpdate.mockImplementation(async (payload) => {
+      Object.assign(existingMedicine, payload);
+      return existingMedicine;
+    });
+
+    mockedMedicine.findByPk.mockResolvedValue(existingMedicine as any);
 
     const updated = await medicineService.updateMedicine(4, { name: 'New name' });
 
@@ -96,15 +99,19 @@ describe('Medicine service', () => {
   });
 
   it('deletes a medicine when it exists', async () => {
+
+    const mockDestroy = jest.fn<(...args: any[]) => Promise<any>>();
+    mockDestroy.mockResolvedValue(undefined);
+
     const medicine = {
       id: 8,
       name: 'Vitamin C',
       description: null,
       deletedAt: null,
-      destroy: jest.fn().mockResolvedValue(undefined),
+      destroy: mockDestroy,
     };
 
-    mockedMedicine.findByPk.mockResolvedValue(medicine);
+    mockedMedicine.findByPk.mockResolvedValue(medicine as any);
 
     const result = await medicineService.deleteMedicine(8);
 
